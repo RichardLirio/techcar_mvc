@@ -1,5 +1,7 @@
 import fastify, { FastifyInstance } from "fastify";
 import { env } from "./env";
+import { HttpError } from "./utils/http-error";
+import { ZodError } from "zod";
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = fastify({
@@ -18,14 +20,14 @@ export async function buildApp(): Promise<FastifyInstance> {
     },
   });
 
+  // Configurar tratamento de erros
+  setupErrorHandling(app);
+
   // Registrar plugins
   await registerPlugins(app);
 
   // Registrar rotas
   await registerRoutes(app);
-
-  // Configurar tratamento de erros
-  setupErrorHandling(app);
 
   return app;
 }
@@ -47,7 +49,7 @@ async function registerPlugins(app: FastifyInstance) {
   await app.register(import("@fastify/helmet"));
 
   // Validação de entrada
-  await app.register(import("@fastify/sensible"));
+  await app.register(import("@fastify/cookie"));
 
   // JWT (se configurado)
   if (env.JWT_SECRET) {
@@ -79,11 +81,11 @@ async function registerRoutes(app: FastifyInstance) {
     async (fastify) => {
       // Rota de teste
       fastify.get("/test", async () => {
-        return {
-          message: "API funcionando!",
-          version: env.APP_VERSION,
-          environment: env.NODE_ENV,
-        };
+        try {
+          throw new HttpError("erro test", 400);
+        } catch (error) {
+          return error;
+        }
       });
     },
     { prefix: "/api/v1" }
@@ -95,11 +97,59 @@ function setupErrorHandling(app: FastifyInstance) {
   app.setErrorHandler((error, request, reply) => {
     request.log.error(error);
 
+    // Verificar se a resposta já foi enviada
+    if (reply.sent) {
+      return;
+    }
+    if (error instanceof HttpError) {
+      return reply.status(error.statusCode).send({
+        error: true,
+        message: error.message,
+        statusCode: error.statusCode,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // Tratar erros do Zod
+    if (error instanceof ZodError) {
+      const validationErrors = error.issues.map((issue) => ({
+        path: issue.path.join("."),
+        message: issue.message,
+        code: issue.code,
+      }));
+
+      return reply.status(400).send({
+        error: true,
+        message: "Dados de entrada inválidos",
+        statusCode: 400,
+        validationErrors,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // Tratar erros do Fastify (como validation errors)
+    if (error.validation) {
+      const validationErrors = error.validation.map((err) => ({
+        path: err.instancePath?.replace("/", "") || err.schemaPath,
+        message: err.message,
+        code: err.keyword,
+      }));
+
+      return reply.status(400).send({
+        error: true,
+        message: "Dados de entrada inválidos",
+        statusCode: 400,
+        validationErrors,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // Tratar outros erros HTTP conhecidos
     const statusCode = error.statusCode || 500;
     const message =
       statusCode >= 500 ? "Erro interno do servidor" : error.message;
 
-    reply.status(statusCode).send({
+    return reply.status(statusCode).send({
       error: true,
       message,
       statusCode,
@@ -109,7 +159,7 @@ function setupErrorHandling(app: FastifyInstance) {
 
   // Handler para rotas não encontradas
   app.setNotFoundHandler((_, reply) => {
-    reply.status(404).send({
+    return reply.status(404).send({
       error: true,
       message: "Rota não encontrada",
       statusCode: 404,

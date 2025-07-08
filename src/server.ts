@@ -30,10 +30,14 @@ class Server {
       });
     });
 
-    // Capturar erros não tratados
+    // Configurar handlers globais que não interferem com o Fastify
     process.on("uncaughtException", (error) => {
       this.app?.log.fatal("Uncaught Exception:", error);
-      process.exit(1);
+
+      // Dar tempo para o log ser processado antes de sair
+      setTimeout(() => {
+        process.exit(1);
+      }, 1000);
     });
 
     process.on("unhandledRejection", (reason, promise) => {
