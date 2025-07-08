@@ -4,7 +4,7 @@ import { env } from "./env";
 export async function buildApp(): Promise<FastifyInstance> {
   const app = fastify({
     logger: {
-      level: env.LOG_LEVEL,
+      level: env.NODE_ENV === "production" ? "error" : "info",
       transport:
         env.NODE_ENV === "development"
           ? {
@@ -108,7 +108,7 @@ function setupErrorHandling(app: FastifyInstance) {
   });
 
   // Handler para rotas não encontradas
-  app.setNotFoundHandler((request, reply) => {
+  app.setNotFoundHandler((_, reply) => {
     reply.status(404).send({
       error: true,
       message: "Rota não encontrada",
