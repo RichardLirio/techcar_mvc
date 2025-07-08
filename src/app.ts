@@ -2,6 +2,7 @@ import fastify, { FastifyInstance } from "fastify";
 import { env } from "./env";
 import { HttpError } from "./utils/http-error";
 import { ZodError } from "zod";
+import { authRoutes } from "./routes/auth-routes";
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = fastify({
@@ -77,19 +78,7 @@ async function registerRoutes(app: FastifyInstance) {
   });
 
   // Rotas da API
-  await app.register(
-    async (fastify) => {
-      // Rota de teste
-      fastify.get("/test", async () => {
-        try {
-          throw new HttpError("erro test", 400);
-        } catch (error) {
-          return error;
-        }
-      });
-    },
-    { prefix: "/api/v1" }
-  );
+  await app.register(authRoutes, { prefix: "/api/v1" });
 }
 
 function setupErrorHandling(app: FastifyInstance) {

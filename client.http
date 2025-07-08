@@ -19,7 +19,7 @@ POST {{baseUrl}}/api/v1/login
 Content-Type: application/json
 
 {
-    "nome": "admin@admin.com",
+    "email": "admin@admin.com",
     "password": "admin123"
 }
 
