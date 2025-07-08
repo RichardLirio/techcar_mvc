@@ -1,0 +1,127 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  role      UserRole @default(USER)
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Client {
+  id        String    @id @default(cuid())
+  name      String
+  cpfCnpj   String    @unique
+  phone     String?
+  email     String?
+  address   String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  vehicles  Vehicle[]
+  orders    Order[]
+
+  @@map("clients")
+}
+
+model Vehicle {
+  id         String  @id @default(cuid())
+  plate      String  @unique
+  model      String
+  brand      String
+  kilometers Int
+  year       Int?
+  clientId   String
+  client     Client  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  orders     Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("vehicles")
+}
+
+model Part {
+  id          String      @id @default(cuid())
+  name        String
+  quantity    Int
+  unitPrice   Decimal
+  description String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  orderItems  OrderItem[]
+
+  @@map("parts")
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  clientId    String
+  vehicleId   String
+  status      OrderStatus @default(IN_PROGRESS)
+  description String?
+  kilometers  Int
+  discount    Decimal     @default(0)
+  totalValue  Decimal     @default(0)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  client   Client      @relation(fields: [clientId], references: [id])
+  vehicle  Vehicle     @relation(fields: [vehicleId], references: [id])
+  services Service[]
+  items    OrderItem[]
+
+  @@map("orders")
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  orderId     String
+  description String
+  price       Decimal
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("services")
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  partId    String
+  quantity  Int
+  unitPrice Decimal
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  part  Part  @relation(fields: [partId], references: [id])
+
+  @@map("order_items")
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum OrderStatus {
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}

@@ -1,0 +1,20 @@
+
+services:
+ postgres:
+  container_name: db-techcar
+  image: postgres
+  ports:
+    - 5432:5432
+  environment:
+    POSTGRES_USER: ${PG_USER}
+    POSTGRES_PASSWORD: ${PG_PASSWORD}
+    POSTGRES_DB: ${PG_DB}
+    PGDATA: /data/postgres
+  volumes:
+    - ./data/pg:/data/postgres
+  restart: unless-stopped
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready -U ${PG_USER} -d ${PG_DB}"]
+    interval: 10s
+    timeout: 5s
+    retries: 5
