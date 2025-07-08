@@ -1,5 +1,4 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/database";
 import {
   CreateUserInput,
@@ -11,6 +10,7 @@ import { HttpError } from "@/utils/http-error";
 import { comparePassword } from "@/utils/compare-password";
 import { env } from "@/env";
 import { SuccessResponse } from "@/@types/response";
+import { hashPassword } from "@/utils/hash-password";
 
 export class AuthController {
   async register(request: FastifyRequest, reply: FastifyReply) {
@@ -26,7 +26,7 @@ export class AuthController {
     }
 
     // Hash da senha
-    const hashedPassword = await bcrypt.hash(data.password, 10);
+    const hashedPassword = await hashPassword(data.password);
 
     // Criar usuário
     const user = await prisma.user.create({
@@ -43,10 +43,13 @@ export class AuthController {
       },
     });
 
-    return reply.status(201).send({
+    const response: SuccessResponse = {
+      success: true,
       message: "Usuário criado com sucesso",
-      user,
-    });
+      data: { user },
+    };
+
+    return reply.status(201).send(response);
   }
 
   async login(request: FastifyRequest, reply: FastifyReply) {

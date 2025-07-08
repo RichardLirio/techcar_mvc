@@ -3,7 +3,7 @@
 @authToken = {{Authenticate.response.body.token}}
 
 # @name Create_user
-POST {{baseUrl}}/api/users
+POST {{baseUrl}}/api/v1/register
 Content-Type: application/json
 
 {

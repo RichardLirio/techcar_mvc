@@ -1,4 +1,6 @@
 import { AuthController } from "@/controllers/auth-controller";
+import { VerifyJWT } from "@/middlewares/verify-jwt";
+import { VerifyUserRole } from "@/middlewares/verify-user-role";
 import { FastifyInstance } from "fastify";
 
 export async function authRoutes(app: FastifyInstance) {
@@ -6,4 +8,10 @@ export async function authRoutes(app: FastifyInstance) {
   const authController = new AuthController();
 
   app.post("/login", authController.login);
+
+  app.post(
+    "/register",
+    { onRequest: [VerifyJWT, VerifyUserRole("ADMIN")] },
+    authController.register
+  );
 }
