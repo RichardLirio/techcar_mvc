@@ -61,7 +61,7 @@ export class AuthController {
     });
 
     if (!user) {
-      throw new HttpError("Credenciais inválidas", 401);
+      throw new HttpError("Email não registrado", 401);
     }
 
     // Verificar senha
@@ -109,5 +109,51 @@ export class AuthController {
       })
       .status(200)
       .send(response);
+  }
+
+  async logout(request: FastifyRequest, reply: FastifyReply) {
+    // Verificar se o cookie existe
+    if (!request.cookies.refreshToken) {
+      throw new HttpError("Nenhuma sessão ativa encontrada", 400);
+    }
+
+    // Limpar o cookie
+    return reply
+      .clearCookie("refreshToken", {
+        path: "/",
+        secure: env.NODE_ENV === "production", // https
+        sameSite: "strict",
+        httpOnly: true,
+      })
+      .status(200)
+      .send({
+        message: "Logout realizado com sucesso",
+        success: true,
+      });
+  }
+
+  async profile(request: FastifyRequest, reply: FastifyReply) {
+    const userId = request.user.sub;
+
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        createdAt: true,
+      },
+    });
+
+    const response: SuccessResponse = {
+      success: true,
+      message: "Dados do usuário logado",
+      data: { user },
+    };
+
+    return reply.status(200).send(response);
   }
 }

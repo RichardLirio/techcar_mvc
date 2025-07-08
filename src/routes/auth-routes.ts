@@ -14,4 +14,8 @@ export async function authRoutes(app: FastifyInstance) {
     { onRequest: [VerifyJWT, VerifyUserRole("ADMIN")] },
     authController.register
   );
+
+  app.post("/logout", { onRequest: [VerifyJWT] }, authController.logout);
+
+  app.get("/profile", { onRequest: [VerifyJWT] }, authController.profile);
 }
