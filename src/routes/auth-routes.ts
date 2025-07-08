@@ -1,4 +1,4 @@
-import { AuthController } from "@/controllers/auth-controller";
+import { AuthController } from "@/controllers/auth/auth-controller";
 import { VerifyJWT } from "@/middlewares/verify-jwt";
 import { VerifyUserRole } from "@/middlewares/verify-user-role";
 import { FastifyInstance } from "fastify";
