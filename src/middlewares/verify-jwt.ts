@@ -4,7 +4,8 @@ import { FastifyReply, FastifyRequest } from "fastify";
 export async function VerifyJWT(request: FastifyRequest, reply: FastifyReply) {
   try {
     await request.jwtVerify();
-  } catch (error) {
-    return reply.status(401).send({ message: "Unauthorized." }); // Send 401 Unauthorized response
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_) {
+    return reply.status(401).send({ error: "Unauthorized." }); // Send 401 Unauthorized response
   }
 }

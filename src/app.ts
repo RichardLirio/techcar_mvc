@@ -127,23 +127,6 @@ function setupErrorHandling(app: FastifyInstance) {
       });
     }
 
-    // Tratar erros do Fastify (como validation errors)
-    if (error.validation) {
-      const validationErrors = error.validation.map((err) => ({
-        path: err.instancePath?.replace("/", "") || err.schemaPath,
-        message: err.message,
-        code: err.keyword,
-      }));
-
-      return reply.status(400).send({
-        error: true,
-        message: "Dados de entrada inválidos",
-        statusCode: 400,
-        validationErrors,
-        timestamp: new Date().toISOString(),
-      });
-    }
-
     // Tratar outros erros HTTP conhecidos
     const statusCode = error.statusCode || 500;
     const message =
