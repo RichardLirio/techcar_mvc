@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "API para gerenciamento de oficina mecânica",
   "main": "dist/server.js",
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsx watch src/server.ts",
