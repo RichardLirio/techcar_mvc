@@ -3,6 +3,7 @@ import { env } from "./env";
 import { HttpError } from "./utils/http-error";
 import { ZodError } from "zod";
 import { authRoutes } from "./routes/auth-routes";
+import { ErrorResponse, SuccessResponse } from "./@types/response";
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = fastify({
@@ -69,7 +70,23 @@ async function registerPlugins(app: FastifyInstance) {
 
 async function registerRoutes(app: FastifyInstance) {
   // Health check
-  app.get("/health", async () => {
+  app.get("/health", async (_, reply) => {
+    const healthData = {
+      status: "healthy",
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(), // tempo de atividade do processo
+      memory: process.memoryUsage(), // uso de memoria do processo
+      version: process.version, // versao do nodejs
+      environment: env.NODE_ENV || "development",
+    };
+
+    const response: SuccessResponse = {
+      success: true,
+      message: "Servidor funcionando normalmente",
+      data: healthData,
+    };
+
+    reply.status(200).send(response);
     return {
       status: "ok",
       timestamp: new Date().toISOString(),
@@ -91,29 +108,30 @@ function setupErrorHandling(app: FastifyInstance) {
       return;
     }
     if (error instanceof HttpError) {
-      return reply.status(error.statusCode).send({
-        error: true,
-        message: error.message,
+      const response: ErrorResponse = {
+        success: false,
+        message: "Ops! Algo errado aconteceu",
         statusCode: error.statusCode,
-        timestamp: new Date().toISOString(),
-      });
+        error: error.message,
+      };
+      return reply.status(error.statusCode).send(response);
     }
 
     // Tratar erros do Zod
     if (error instanceof ZodError) {
-      const validationErrors = error.issues.map((issue) => ({
-        path: issue.path.join("."),
-        message: issue.message,
-        code: issue.code,
+      const validationErrors = error.errors.map((err) => ({
+        field: err.path.join("."),
+        message: err.message,
       }));
 
-      return reply.status(400).send({
-        error: true,
-        message: "Dados de entrada inválidos",
+      const response: ErrorResponse = {
+        success: false,
+        message: "Dados de solicitação inválidos",
+        error: validationErrors,
         statusCode: 400,
-        validationErrors,
-        timestamp: new Date().toISOString(),
-      });
+      };
+
+      return reply.status(400).send(response);
     }
 
     // Tratar outros erros HTTP conhecidos
@@ -130,12 +148,14 @@ function setupErrorHandling(app: FastifyInstance) {
   });
 
   // Handler para rotas não encontradas
-  app.setNotFoundHandler((_, reply) => {
-    return reply.status(404).send({
-      error: true,
+  app.setNotFoundHandler((request, reply) => {
+    const response: ErrorResponse = {
+      success: false,
       message: "Rota não encontrada",
+      error: `Rote ${request.method} ${request.originalUrl} not found`,
       statusCode: 404,
-      timestamp: new Date().toISOString(),
-    });
+    };
+
+    return reply.status(404).send(response);
   });
 }

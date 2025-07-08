@@ -10,6 +10,7 @@ import {
 import { HttpError } from "@/utils/http-error";
 import { comparePassword } from "@/utils/compare-password";
 import { env } from "@/env";
+import { SuccessResponse } from "@/@types/response";
 
 export class AuthController {
   async register(request: FastifyRequest, reply: FastifyReply) {
@@ -90,6 +91,12 @@ export class AuthController {
       }
     ); // Cria o refresh token JWT com o id do usuário e o papel (role) do usuário, com validade de 7 dias
 
+    const response: SuccessResponse = {
+      success: true,
+      message: "Login realizado com sucesso",
+      data: { token },
+    };
+
     return reply
       .setCookie("refreshToken", refreshToken, {
         path: "/",
@@ -98,9 +105,6 @@ export class AuthController {
         httpOnly: true,
       })
       .status(200)
-      .send({
-        message: "Login realizado com sucesso",
-        token,
-      });
+      .send(response);
   }
 }
