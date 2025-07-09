@@ -59,6 +59,15 @@ describe("Get User Controller (e2e)", async () => {
       .set("Cookie", cookies);
 
     expect(response.statusCode).toEqual(200);
+    expect(response.body.data).toEqual(
+      expect.objectContaining({
+        user: expect.objectContaining({
+          id: expect.any(String),
+          name: "John doe",
+          email: "johndoe@example.com",
+        }),
+      })
+    );
   });
 
   it("should not to be able to get user profile with invalid id", async () => {
