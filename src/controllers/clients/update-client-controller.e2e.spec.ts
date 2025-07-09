@@ -8,6 +8,7 @@ import { hashPassword } from "@/utils/hash-password";
 
 describe("Update Client Controller (e2e)", async () => {
   let application: FastifyInstance;
+
   beforeAll(async () => {
     application = await buildApp();
     application.ready();
@@ -20,6 +21,10 @@ describe("Update Client Controller (e2e)", async () => {
         role: "ADMIN",
       },
     });
+  });
+
+  afterEach(async () => {
+    await prisma.$executeRaw`TRUNCATE TABLE "clients" CASCADE`;
   });
 
   afterAll(async () => {

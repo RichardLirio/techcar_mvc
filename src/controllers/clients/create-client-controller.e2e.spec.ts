@@ -13,18 +13,6 @@ describe("Create Client Controller (e2e)", async () => {
     application = await buildApp();
     application.ready();
     await setupTestDatabase();
-  });
-
-  afterAll(async () => {
-    await application.close();
-    await cleanupTestDatabase();
-  });
-
-  afterEach(async () => {
-    await prisma.$executeRaw`TRUNCATE TABLE "clients"`;
-  });
-
-  async function geraCookies() {
     await prisma.user.create({
       data: {
         name: "Admin User",
@@ -33,6 +21,18 @@ describe("Create Client Controller (e2e)", async () => {
         role: "ADMIN",
       },
     });
+  });
+
+  afterAll(async () => {
+    await application.close();
+    await cleanupTestDatabase();
+  });
+
+  afterEach(async () => {
+    await prisma.$executeRaw`TRUNCATE TABLE "clients" CASCADE`;
+  });
+
+  async function geraCookies() {
     const loginResponse = await request(application.server)
       .post("/api/v1/login")
       .send({
@@ -113,7 +113,7 @@ describe("Create Client Controller (e2e)", async () => {
       },
     });
     const response = await request(application.server)
-      .post("/api/v1/users")
+      .post("/api/v1/clients")
       .set("Cookie", cookies)
       .send({
         name: "John doe ltda",
