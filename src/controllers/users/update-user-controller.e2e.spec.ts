@@ -46,10 +46,22 @@ describe("Update User Controller (e2e)", async () => {
 
   it("should be able to update user", async () => {
     const cookies = await geraCookies();
+    const user = await prisma.user.create({
+      data: {
+        name: "John Doe",
+        email: "johndoe@example.com",
+        password: await hashPassword("123456"),
+      },
+    });
 
     const response = await request(application.server)
-      .patch("/api/v1/users/id") //pelo id do usuario
-      .set("Cookie", cookies);
+      .patch(`/api/v1/users/${user.id}`) //pelo id do usuario
+      .set("Cookie", cookies)
+      .send({
+        name: "John Doe updated",
+        email: "johndoeupdated@example.com",
+        password: "789654",
+      });
     expect(response.statusCode).toEqual(200);
   });
 });

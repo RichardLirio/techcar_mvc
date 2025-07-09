@@ -53,4 +53,14 @@ describe("Get User Controller (e2e)", async () => {
 
     expect(response.statusCode).toEqual(200);
   });
+
+  it("should not to be able to get user profile with invalid id", async () => {
+    const cookies = await geraCookies();
+
+    const response = await request(application.server)
+      .get(`/api/v1/users/invalid-id`) // buscar pelo id do usuario
+      .set("Cookie", cookies);
+
+    expect(response.statusCode).toEqual(400);
+  });
 });

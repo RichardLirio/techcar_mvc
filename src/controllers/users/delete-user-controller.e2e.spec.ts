@@ -50,6 +50,6 @@ describe("Delete User Controller (e2e)", async () => {
     const response = await request(application.server)
       .delete("/api/v1/users/id") //pelo id do usuario
       .set("Cookie", cookies);
-    expect(response.statusCode).toEqual(200);
+    expect(response.statusCode).toEqual(204);
   });
 });
