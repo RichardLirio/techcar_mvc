@@ -4,6 +4,7 @@ import { HttpError } from "./utils/http-error";
 import { ZodError } from "zod";
 import { authRoutes } from "./routes/auth-routes";
 import { ErrorResponse, SuccessResponse } from "./@types/response";
+import { usersRoutes } from "./routes/users-routes";
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = fastify({
@@ -93,9 +94,10 @@ async function registerRoutes(app: FastifyInstance) {
       uptime: process.uptime(),
     };
   });
-
+  const prefix = "/api/v1";
   // Rotas da API
-  await app.register(authRoutes, { prefix: "/api/v1" });
+  await app.register(authRoutes, { prefix: `${prefix}` });
+  await app.register(usersRoutes, { prefix: `${prefix}/users` });
 }
 
 function setupErrorHandling(app: FastifyInstance) {

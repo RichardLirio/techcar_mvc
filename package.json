@@ -16,7 +16,11 @@
     "db:studio": "prisma studio",
     "prepare": "husky",
     "check": "eslint . --ext .ts",
-    "check:fix": "eslint . --ext .ts  --fix"
+    "check:fix": "eslint . --ext .ts  --fix",
+    "test": "vitest run --config vitest.config.mts",
+    "test:watch": "vitest watch --config vitest.config.mts",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [
     "fastify",
@@ -37,9 +41,12 @@
     "globals": "^16.3.0",
     "husky": "^9.1.7",
     "prisma": "^6.11.1",
+    "supertest": "^7.1.3",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.36.0"
+    "typescript-eslint": "^8.36.0",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^3.2.4"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.2",
@@ -48,6 +55,7 @@
     "@fastify/jwt": "^9.1.0",
     "@fastify/rate-limit": "^10.3.0",
     "@prisma/client": "^6.11.1",
+    "@types/supertest": "^6.0.3",
     "bcryptjs": "^3.0.2",
     "dotenv": "^17.1.0",
     "fastify": "^5.4.0",

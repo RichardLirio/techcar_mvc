@@ -1,6 +1,5 @@
 @baseUrl = http://localhost:3333
-@userId = 4e2713d4-d822-46aa-8e60-e7f817f6bc66
-@authToken = {{Authenticate.response.body.token}}
+@userId = cmcv7vxcp0000sdq0mn3qn0bq
 
 # @name Create_user
 POST {{baseUrl}}/api/v1/register
@@ -26,36 +25,27 @@ Content-Type: application/json
 ###
 
 # @name Logout
-POST {{baseUrl}}/api/auth/logout
-Content-Type: application/json
-Authorization: Bearer {{authToken}}
+POST {{baseUrl}}/api/v1/logout
 
-{
-    "email": "richardTeste@hotmail.com",
-    "password": "123456"
-}
 
 ###
 
 # @name Fetch_all_users
-GET {{baseUrl}}/api/users
+GET {{baseUrl}}/api/v1/users
 Content-Type: application/json
-Authorization: Bearer {{authToken}}
 
 ###
 
 
 # @name Get_user_by_id
-GET {{baseUrl}}/api/users/{{userId}}
+GET {{baseUrl}}/api/v1/users/{{userId}}
 Content-Type: application/json
-Authorization: Bearer {{authToken}}
 
 ###
 
 
 # @name Delete_user_by_id
-DELETE {{baseUrl}}/api/users/{{userId}}
+DELETE {{baseUrl}}/api/v1/users/{{userId}}
 Content-Type: application/json
-Authorization: Bearer {{authToken}}
 
 ###
