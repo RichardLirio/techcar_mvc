@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { hashPassword } from "../src/utils/hash-password";
+import { env } from "@/env";
 const prisma = new PrismaClient();
 async function main() {
   const userAdminExist = await prisma.user.findUnique({
@@ -11,8 +12,8 @@ async function main() {
     const admin = await prisma.user.create({
       data: {
         name: "Admin User",
-        email: "admin@admin.com",
-        password: await hashPassword("admin123"),
+        email: env.ADMIN_USER_EMAIL,
+        password: await hashPassword(env.ADMIN_USER_PASSWORD),
         role: "ADMIN",
       },
     });

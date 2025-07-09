@@ -13,6 +13,8 @@ const envSchema = z.object({
   APP_VERSION: z.string(),
   RATE_LIMIT_MAX: z.coerce.number(),
   HOST: z.string().default("localhost"),
+  ADMIN_USER_EMAIL: z.string(),
+  ADMIN_USER_PASSWORD: z.string().min(6),
 });
 
 const _env = envSchema.safeParse(process.env);
