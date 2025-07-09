@@ -76,8 +76,8 @@ describe("Update Client Controller (e2e)", async () => {
       expect.objectContaining({
         clientUpdated: expect.objectContaining({
           id: expect.any(String),
-          name: "John doe client Update",
-          cpfCnpj: "83.906.381/0001-08",
+          name: "JOHN DOE CLIENT UPDATE",
+          cpfCnpj: "83906381000108",
           phone: "27997876755",
           email: "johndo@example.com",
           address: "Rua nova, numero 1, Vitoria-ES",
@@ -91,7 +91,7 @@ describe("Update Client Controller (e2e)", async () => {
     await prisma.client.create({
       data: {
         name: "John doe client",
-        cpfCnpj: "470.223.910-41",
+        cpfCnpj: "47022391041",
         phone: "27997876754",
         email: "johndoe@example.com",
         address: "Rua nova, numero 2, Vitoria-ES",

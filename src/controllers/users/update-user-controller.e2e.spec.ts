@@ -67,7 +67,7 @@ describe("Update User Controller (e2e)", async () => {
       expect.objectContaining({
         userUpdated: expect.objectContaining({
           id: expect.any(String),
-          name: "John Doe updated",
+          name: "JOHN DOE UPDATED",
           email: "johndoeupdated@example.com",
         }),
       })

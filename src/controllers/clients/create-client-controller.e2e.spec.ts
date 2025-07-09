@@ -67,9 +67,9 @@ describe("Create Client Controller (e2e)", async () => {
       expect.objectContaining({
         client: expect.objectContaining({
           id: expect.any(String),
-          name: "John doe client",
+          name: "JOHN DOE CLIENT",
           email: "johndoe@example.com",
-          cpfCnpj: "470.223.910-41",
+          cpfCnpj: "47022391041",
         }),
       })
     );
@@ -93,9 +93,9 @@ describe("Create Client Controller (e2e)", async () => {
       expect.objectContaining({
         client: expect.objectContaining({
           id: expect.any(String),
-          name: "John doe ltda",
+          name: "JOHN DOE LTDA",
           email: "johndoe@example.com",
-          cpfCnpj: "83.906.381/0001-08",
+          cpfCnpj: "83906381000108",
         }),
       })
     );
@@ -106,7 +106,7 @@ describe("Create Client Controller (e2e)", async () => {
     await prisma.client.create({
       data: {
         name: "John doe ltda",
-        cpfCnpj: "83.906.381/0001-08",
+        cpfCnpj: "83906381000108",
         phone: "27997876754",
         email: "johndoe@example.com",
         address: "Rua nova, numero 2, Vitoria-ES",
