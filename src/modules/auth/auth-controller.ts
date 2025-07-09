@@ -1,57 +1,12 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { prisma } from "@/lib/database";
-import {
-  CreateUserInput,
-  createUserSchema,
-  LoginInput,
-  loginSchema,
-} from "@/schemas/users-schemas";
+import { LoginInput, loginSchema } from "@/schemas/users-schemas";
 import { HttpError } from "@/utils/http-error";
 import { comparePassword } from "@/utils/compare-password";
 import { env } from "@/env";
 import { SuccessResponse } from "@/@types/response";
-import { hashPassword } from "@/utils/hash-password";
 
 export class AuthController {
-  async register(request: FastifyRequest, reply: FastifyReply) {
-    const data = createUserSchema.parse(request.body) as CreateUserInput;
-
-    // Verificar se o email já existe
-    const existingUser = await prisma.user.findUnique({
-      where: { email: data.email },
-    });
-
-    if (existingUser) {
-      throw new HttpError("Email já está em uso", 400);
-    }
-
-    // Hash da senha
-    const hashedPassword = await hashPassword(data.password);
-
-    // Criar usuário
-    const user = await prisma.user.create({
-      data: {
-        ...data,
-        password: hashedPassword,
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        createdAt: true,
-      },
-    });
-
-    const response: SuccessResponse = {
-      success: true,
-      message: "Usuário criado com sucesso",
-      data: { user },
-    };
-
-    return reply.status(201).send(response);
-  }
-
   async login(request: FastifyRequest, reply: FastifyReply) {
     const data = loginSchema.parse(request.body) as LoginInput;
 
