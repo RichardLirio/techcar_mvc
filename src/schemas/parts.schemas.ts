@@ -2,10 +2,19 @@ import z from "zod";
 
 // Part schemas
 export const createPartSchema = z.object({
-  name: z.string().min(1, "Nome é obrigatório").toUpperCase(),
+  name: z
+    .string()
+    .min(1, "Nome é obrigatório")
+    .transform((val) => val.toUpperCase()),
   quantity: z.number().int().min(0, "Quantidade deve ser maior ou igual a 0"),
-  unitPrice: z.number().positive("Preço unitário deve ser positivo"),
-  description: z.string().toUpperCase().optional(),
+  unitPrice: z
+    .number()
+    .min(0, "Preço deve ser positivo")
+    .transform((val) => Number(val.toFixed(2))), // Arredonda corretamente
+  description: z
+    .string()
+    .transform((val) => val.toUpperCase())
+    .optional(),
 });
 
 export const updatePartSchema = z.object({

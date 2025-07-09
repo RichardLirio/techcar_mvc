@@ -7,6 +7,7 @@ import { ErrorResponse, SuccessResponse } from "./@types/response";
 import { usersRoutes } from "./modules/users/users.routes";
 import { clientsRoutes } from "./modules/clients/clients.routes";
 import { vehiclesRoutes } from "./modules/vehicle/vehicle.routes";
+import { partsRoutes } from "./modules/parts/parts.routes";
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = fastify({
@@ -102,6 +103,7 @@ async function registerRoutes(app: FastifyInstance) {
   await app.register(usersRoutes, { prefix: `${prefix}/users` });
   await app.register(clientsRoutes, { prefix: `${prefix}/clients` });
   await app.register(vehiclesRoutes, { prefix: `${prefix}/vehicles` });
+  await app.register(partsRoutes, { prefix: `${prefix}/parts` });
 }
 
 function setupErrorHandling(app: FastifyInstance) {
