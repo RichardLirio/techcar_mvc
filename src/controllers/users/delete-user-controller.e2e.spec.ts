@@ -12,7 +12,7 @@ describe("Delete User Controller (e2e)", async () => {
     application = await buildApp();
     application.ready();
     await setupTestDatabase();
-    prisma.user.create({
+    await prisma.user.create({
       data: {
         name: "Admin User",
         email: "admin@admin.com",
@@ -47,8 +47,16 @@ describe("Delete User Controller (e2e)", async () => {
   it("should be able to delete user", async () => {
     const cookies = await geraCookies();
 
+    const user = await prisma.user.create({
+      data: {
+        name: "John doe",
+        email: "johndoe@example.com",
+        password: "123456",
+      },
+    });
+
     const response = await request(application.server)
-      .delete("/api/v1/users/id") //pelo id do usuario
+      .delete(`/api/v1/users/${user.id}`) //pelo id do usuario
       .set("Cookie", cookies);
     expect(response.statusCode).toEqual(204);
   });

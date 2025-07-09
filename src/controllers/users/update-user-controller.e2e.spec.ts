@@ -12,7 +12,7 @@ describe("Update User Controller (e2e)", async () => {
     application = await buildApp();
     application.ready();
     await setupTestDatabase();
-    prisma.user.create({
+    await prisma.user.create({
       data: {
         name: "Admin User",
         email: "admin@admin.com",

@@ -51,10 +51,7 @@ export class UsersController {
     return reply.status(201).send(response);
   }
 
-  async deleteById(
-    request: FastifyRequest<{ Params: IdParam }>,
-    reply: FastifyReply
-  ) {
+  async deleteById(request: FastifyRequest, reply: FastifyReply) {
     const { id } = idParamSchema.parse(request.params) as IdParam;
 
     // Deleta Usuario
@@ -92,10 +89,7 @@ export class UsersController {
     return reply.status(200).send(response);
   }
 
-  async getById(
-    request: FastifyRequest<{ Params: IdParam }>,
-    reply: FastifyReply
-  ) {
+  async getById(request: FastifyRequest, reply: FastifyReply) {
     const { id } = idParamSchema.parse(request.params) as IdParam;
 
     const user = await prisma.user.findUnique({
@@ -125,10 +119,7 @@ export class UsersController {
     return reply.status(200).send(response);
   }
 
-  async update(
-    request: FastifyRequest<{ Params: IdParam }>,
-    reply: FastifyReply
-  ) {
+  async update(request: FastifyRequest, reply: FastifyReply) {
     const data = updateUserSchema.parse(request.body) as UpdateUserInput;
 
     const { id } = idParamSchema.parse(request.params) as IdParam;

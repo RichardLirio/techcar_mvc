@@ -1,5 +1,5 @@
 @baseUrl = http://localhost:3333
-@userId = 4e2713d4-d822-46aa-8e60-e7f817f6bc66
+@userId = cmcv7vxcp0000sdq0mn3qn0bq
 
 # @name Create_user
 POST {{baseUrl}}/api/v1/register
@@ -31,21 +31,21 @@ POST {{baseUrl}}/api/v1/logout
 ###
 
 # @name Fetch_all_users
-GET {{baseUrl}}/api/users
+GET {{baseUrl}}/api/v1/users
 Content-Type: application/json
 
 ###
 
 
 # @name Get_user_by_id
-GET {{baseUrl}}/api/users/{{userId}}
+GET {{baseUrl}}/api/v1/users/{{userId}}
 Content-Type: application/json
 
 ###
 
 
 # @name Delete_user_by_id
-DELETE {{baseUrl}}/api/users/{{userId}}
+DELETE {{baseUrl}}/api/v1/users/{{userId}}
 Content-Type: application/json
 
 ###
