@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { prisma } from "@/lib/database";
-import { LoginInput, loginSchema } from "@/schemas/users-schemas";
+import { LoginInput, loginSchema } from "@/schemas/users.schemas";
 import { HttpError } from "@/utils/http-error";
 import { comparePassword } from "@/utils/compare-password";
 import { env } from "@/env";

@@ -1,4 +1,4 @@
-import { UsersController } from "@/modules/users/user-controller";
+import { UsersController } from "@/modules/users/user.controller";
 import { VerifyJWT } from "@/middlewares/verify-jwt";
 import { VerifyUserRole } from "@/middlewares/verify-user-role";
 import { FastifyInstance } from "fastify";

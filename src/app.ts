@@ -2,10 +2,10 @@ import fastify, { FastifyInstance } from "fastify";
 import { env } from "./env";
 import { HttpError } from "./utils/http-error";
 import { ZodError } from "zod";
-import { authRoutes } from "./modules/auth/auth-routes";
+import { authRoutes } from "./modules/auth/auth.routes";
 import { ErrorResponse, SuccessResponse } from "./@types/response";
-import { usersRoutes } from "./modules/users/users-routes";
-import { clientsRoutes } from "./modules/clients/clients-routes";
+import { usersRoutes } from "./modules/users/users.routes";
+import { clientsRoutes } from "./modules/clients/clients.routes";
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = fastify({

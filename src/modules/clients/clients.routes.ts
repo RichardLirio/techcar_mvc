@@ -1,4 +1,4 @@
-import { ClientController } from "@/modules/clients/clients-controller";
+import { ClientController } from "@/modules/clients/clients.controller";
 import { VerifyJWT } from "@/middlewares/verify-jwt";
 import { VerifyUserRole } from "@/middlewares/verify-user-role";
 import { FastifyInstance } from "fastify";

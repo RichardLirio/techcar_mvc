@@ -1,4 +1,4 @@
-import { AuthController } from "@/modules/auth/auth-controller";
+import { AuthController } from "@/modules/auth/auth.controller";
 import { VerifyJWT } from "@/middlewares/verify-jwt";
 import { FastifyInstance } from "fastify";
 

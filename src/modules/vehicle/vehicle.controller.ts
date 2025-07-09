@@ -5,10 +5,10 @@ import {
   createVehicleSchema,
   UpdateVehicleInput,
   updateVehicleSchema,
-} from "@/schemas/vehicles-schemas";
+} from "@/schemas/vehicles.schemas";
 import { HttpError } from "@/utils/http-error";
 import { SuccessResponse } from "@/@types/response";
-import { IdParam, idParamSchema } from "@/schemas/common-schemas";
+import { IdParam, idParamSchema } from "@/schemas/common.schemas";
 
 export class VehicleController {
   async create(request: FastifyRequest, reply: FastifyReply) {

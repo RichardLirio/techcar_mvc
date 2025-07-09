@@ -5,10 +5,10 @@ import {
   createClientSchema,
   UpdateClientInput,
   updateClientSchema,
-} from "@/schemas/clients-schemas";
+} from "@/schemas/clients.schemas";
 import { HttpError } from "@/utils/http-error";
 import { SuccessResponse } from "@/@types/response";
-import { IdParam, idParamSchema } from "@/schemas/common-schemas";
+import { IdParam, idParamSchema } from "@/schemas/common.schemas";
 
 export class ClientController {
   async create(request: FastifyRequest, reply: FastifyReply) {

@@ -5,11 +5,11 @@ import {
   createUserSchema,
   UpdateUserInput,
   updateUserSchema,
-} from "@/schemas/users-schemas";
+} from "@/schemas/users.schemas";
 import { HttpError } from "@/utils/http-error";
 import { SuccessResponse } from "@/@types/response";
 import { hashPassword } from "@/utils/hash-password";
-import { IdParam, idParamSchema } from "@/schemas/common-schemas";
+import { IdParam, idParamSchema } from "@/schemas/common.schemas";
 
 export class UsersController {
   async create(request: FastifyRequest, reply: FastifyReply) {
