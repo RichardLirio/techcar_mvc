@@ -1,17 +1,7 @@
 @baseUrl = http://localhost:3333
 @userId = cmcuip5t900007f48yuu79x2r
 
-# @name Create_user
-POST {{baseUrl}}/api/v1/register
-Content-Type: application/json
 
-{
-    "name":"Richard Lirio",
-    "email": "richard2@hotmail.com",
-    "password": "123456"
-}
-
-###
 
 # @name Authenticate
 POST {{baseUrl}}/api/v1/login
@@ -30,6 +20,18 @@ POST {{baseUrl}}/api/v1/logout
 
 ###
 
+# @name Create_user
+POST {{baseUrl}}/api/v1/users
+Content-Type: application/json
+
+{
+    "name":"Richard Lirio",
+    "email": "richard@hotmail.com",
+    "password": "123456"
+}
+
+###
+
 # @name Fetch_all_users
 GET {{baseUrl}}/api/v1/users
 Content-Type: application/json
@@ -43,9 +45,49 @@ Content-Type: application/json
 
 ###
 
+# @name Update_user
+PATCH  {{baseUrl}}/api/v1/users/{{userId}}
+Content-Type: application/json
+
+{
+    "name":"Richard Lirio",
+    "email": "richard2@hotmail.com",
+    "password": "123456"
+}
+
+###
+
 
 # @name Delete_user_by_id
 DELETE {{baseUrl}}/api/v1/users/{{userId}}
+Content-Type: application/json
+
+###
+
+
+# @name Create_Client
+POST {{baseUrl}}/api/v1/clients
+Content-Type: application/json
+
+{
+    "name": "John doe client",
+    "cpfCnpj": "470.223.910-41",
+    "phone": "27997876754",
+    "email": "johndoe@example.com",
+    "address": "Rua nova, numero 2, Vitoria-ES"
+}
+
+###
+
+
+# @name Fetch_all_clients
+GET {{baseUrl}}/api/v1/clients
+Content-Type: application/json
+
+###
+
+# @name Get_client_by_id
+GET {{baseUrl}}/api/v1/clients/{{userId}}
 Content-Type: application/json
 
 ###

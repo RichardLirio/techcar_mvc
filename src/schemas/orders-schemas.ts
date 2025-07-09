@@ -2,7 +2,7 @@ import z from "zod";
 
 // Order schemas
 export const serviceSchema = z.object({
-  description: z.string().min(1, "Descrição é obrigatória"),
+  description: z.string().min(1, "Descrição é obrigatória").toUpperCase(),
   price: z.number().positive("Preço deve ser positivo"),
 });
 
@@ -15,7 +15,7 @@ export const orderItemSchema = z.object({
 export const createOrderSchema = z.object({
   clientId: z.string().min(1, "Cliente é obrigatório"),
   vehicleId: z.string().min(1, "Veículo é obrigatório"),
-  description: z.string().optional(),
+  description: z.string().toUpperCase().optional(),
   kilometers: z.number().min(1, "Quilometragem é obrigatória"),
   discount: z
     .number()
@@ -30,7 +30,7 @@ export const createOrderSchema = z.object({
 export const updateOrderSchema = z.object({
   clientId: z.string().min(1, "Cliente é obrigatório").optional(),
   vehicleId: z.string().min(1, "Veículo é obrigatório").optional(),
-  description: z.string().optional(),
+  description: z.string().toUpperCase().optional(),
   kilometers: z.number().min(1, "Quilometragem é obrigatória"),
   discount: z
     .number()

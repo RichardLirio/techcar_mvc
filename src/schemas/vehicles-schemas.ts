@@ -1,10 +1,11 @@
+import { formatarPlaca } from "@/utils/formata-placa-veiculos";
 import z from "zod";
 
 // Vehicle schemas
 export const createVehicleSchema = z.object({
-  plate: z.string().min(1, "Placa é obrigatória"),
-  model: z.string().min(1, "Modelo é obrigatório"),
-  brand: z.string().min(1, "Marca é obrigatória"),
+  plate: z.string().min(1, "Placa é obrigatória").transform(formatarPlaca),
+  model: z.string().min(1, "Modelo é obrigatório").toUpperCase(),
+  brand: z.string().min(1, "Marca é obrigatória").toUpperCase(),
   kilometers: z.number().min(1, "Quilometragem é obrigatória"),
   year: z
     .number()
@@ -16,9 +17,13 @@ export const createVehicleSchema = z.object({
 });
 
 export const updateVehicleSchema = z.object({
-  plate: z.string().min(1, "Placa é obrigatória").optional(),
-  model: z.string().min(1, "Modelo é obrigatório").optional(),
-  brand: z.string().min(1, "Marca é obrigatória").optional(),
+  plate: z
+    .string()
+    .min(1, "Placa é obrigatória")
+    .transform(formatarPlaca)
+    .optional(),
+  model: z.string().min(1, "Modelo é obrigatório").toUpperCase().optional(),
+  brand: z.string().min(1, "Marca é obrigatória").toUpperCase().optional(),
   kilometers: z.number().min(1, "Quilometragem é obrigatória"),
   year: z
     .number()
