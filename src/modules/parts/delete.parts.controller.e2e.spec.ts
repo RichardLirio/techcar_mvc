@@ -6,7 +6,7 @@ import { FastifyInstance } from "fastify";
 import { prisma } from "@/lib/database";
 import { hashPassword } from "@/utils/hash-password";
 
-describe("Get Client Controller (e2e)", async () => {
+describe("Delete Part Controller (e2e)", async () => {
   let application: FastifyInstance;
   beforeAll(async () => {
     application = await buildApp();
@@ -14,7 +14,7 @@ describe("Get Client Controller (e2e)", async () => {
     await setupTestDatabase();
     await prisma.user.create({
       data: {
-        name: "Admin User",
+        name: "Admin user",
         email: "admin@admin.com",
         password: await hashPassword("123456"),
         role: "ADMIN",
@@ -44,44 +44,27 @@ describe("Get Client Controller (e2e)", async () => {
     return cookies;
   }
 
-  it("should be able to get client data", async () => {
+  it("should be able to delete a part", async () => {
     const cookies = await geraCookies();
-    const client = await prisma.client.create({
+
+    const part = await prisma.part.create({
       data: {
-        name: "John doe client",
-        cpfCnpj: "470.223.910-41",
-        phone: "27997876754",
-        email: "johndoe@example.com",
-        address: "Rua nova, numero 2, Vitoria-ES",
+        name: "FILTRO COMBUSTIVEL",
+        quantity: 10,
+        description: "FILTRO COMBUSTIVEL DO ARGO 2018",
+        unitPrice: 80,
       },
     });
 
     const response = await request(application.server)
-      .get(`/api/v1/clients/${client.id}`) // buscar pelo id do cliente
+      .delete(`/api/v1/parts/${part.id}`)
       .set("Cookie", cookies);
+    expect(response.statusCode).toEqual(204);
 
-    expect(response.statusCode).toEqual(200);
-    expect(response.body.data).toEqual(
-      expect.objectContaining({
-        client: expect.objectContaining({
-          id: expect.any(String),
-          name: "John doe client",
-          cpfCnpj: "470.223.910-41",
-          phone: "27997876754",
-          email: "johndoe@example.com",
-          address: "Rua nova, numero 2, Vitoria-ES",
-        }),
-      })
-    );
-  });
+    const partExist = await prisma.part.findUnique({
+      where: { id: part.id },
+    });
 
-  it("should not to be able to get user profile with invalid id", async () => {
-    const cookies = await geraCookies();
-
-    const response = await request(application.server)
-      .get(`/api/v1/clients/invalid-id`) // buscar pelo id do usuario
-      .set("Cookie", cookies);
-
-    expect(response.statusCode).toEqual(400);
+    expect(partExist).toBeNull();
   });
 });

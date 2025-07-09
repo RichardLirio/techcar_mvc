@@ -6,7 +6,7 @@ import { FastifyInstance } from "fastify";
 import { prisma } from "@/lib/database";
 import { hashPassword } from "@/utils/hash-password";
 
-describe("Get Vehicle Controller (e2e)", async () => {
+describe("Get Part Controller (e2e)", async () => {
   let application: FastifyInstance;
   beforeAll(async () => {
     application = await buildApp();
@@ -44,53 +44,41 @@ describe("Get Vehicle Controller (e2e)", async () => {
     return cookies;
   }
 
-  it("should be able to get vehicle data", async () => {
+  it("should be able to get part data", async () => {
     const cookies = await geraCookies();
-    const client = await prisma.client.create({
+
+    const part = await prisma.part.create({
       data: {
-        name: "JOHN DOE CLIENT",
-        cpfCnpj: "47022391041",
-        phone: "27997876754",
-        email: "johndoe@example.com",
-        address: "Rua nova, numero 2, Vitoria-ES",
+        name: "FILTRO COMBUSTIVEL",
+        quantity: 10,
+        description: "FILTRO COMBUSTIVEL DO ARGO 2018",
+        unitPrice: 99,
       },
     });
 
-    const vehicle = await prisma.vehicle.create({
-      data: {
-        plate: "PPW1020",
-        model: "ARGO",
-        brand: "FIAT",
-        kilometers: 10000,
-        year: 2017,
-        clientId: client.id,
-      },
-    });
     const response = await request(application.server)
-      .get(`/api/v1/vehicles/${vehicle.id}`) // buscar pelo id do vehiclee
+      .get(`/api/v1/parts/${part.id}`)
       .set("Cookie", cookies);
 
     expect(response.statusCode).toEqual(200);
     expect(response.body.data).toEqual(
       expect.objectContaining({
-        vehicle: expect.objectContaining({
+        part: expect.objectContaining({
           id: expect.any(String),
-          plate: "PPW1020",
-          model: "ARGO",
-          brand: "FIAT",
-          kilometers: 10000,
-          year: 2017,
-          clientId: client.id,
+          name: "FILTRO COMBUSTIVEL",
+          quantity: 10,
+          description: "FILTRO COMBUSTIVEL DO ARGO 2018",
+          unitPrice: "99",
         }),
       })
     );
   });
 
-  it("should not to be able to get vehicle data with invalid id", async () => {
+  it("should not to be able to get part data with invalid id", async () => {
     const cookies = await geraCookies();
 
     const response = await request(application.server)
-      .get(`/api/v1/vehicles/invalid-id`) // buscar pelo id do usuario
+      .get(`/api/v1/parts/invalid-id`) // buscar pelo id do usuario
       .set("Cookie", cookies);
 
     expect(response.statusCode).toEqual(400);
