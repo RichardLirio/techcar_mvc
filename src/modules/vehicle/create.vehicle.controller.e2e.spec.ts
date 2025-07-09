@@ -6,7 +6,7 @@ import { FastifyInstance } from "fastify";
 import { prisma } from "@/lib/database";
 import { hashPassword } from "@/utils/hash-password";
 
-describe("Create Client Controller (e2e)", async () => {
+describe("Create Vehicle Controller (e2e)", async () => {
   let application: FastifyInstance;
 
   beforeAll(async () => {
@@ -29,6 +29,7 @@ describe("Create Client Controller (e2e)", async () => {
   });
 
   afterEach(async () => {
+    await prisma.$executeRaw`TRUNCATE TABLE "vehicles" CASCADE`;
     await prisma.$executeRaw`TRUNCATE TABLE "clients" CASCADE`;
   });
 
@@ -49,78 +50,98 @@ describe("Create Client Controller (e2e)", async () => {
     return cookies;
   }
 
-  it("should be able to create a fisic client", async () => {
+  it("should be able to create a vehicle", async () => {
     const cookies = await geraCookies();
 
-    const response = await request(application.server)
-      .post("/api/v1/clients")
-      .set("Cookie", cookies)
-      .send({
-        name: "John doe client",
-        cpfCnpj: "470.223.910-41",
-        phone: "27997876754",
-        email: "johndoe@example.com",
-        address: "Rua nova, numero 2, Vitoria-ES",
-      });
-    expect(response.statusCode).toEqual(201);
-    expect(response.body.data).toEqual(
-      expect.objectContaining({
-        client: expect.objectContaining({
-          id: expect.any(String),
-          name: "JOHN DOE CLIENT",
-          email: "johndoe@example.com",
-          cpfCnpj: "47022391041",
-        }),
-      })
-    );
-  });
-
-  it("should be able to create a juridic client", async () => {
-    const cookies = await geraCookies();
-
-    const response = await request(application.server)
-      .post("/api/v1/clients")
-      .set("Cookie", cookies)
-      .send({
-        name: "John doe ltda",
-        cpfCnpj: "83.906.381/0001-08",
-        phone: "27997876754",
-        email: "johndoe@example.com",
-        address: "Rua nova, numero 2, Vitoria-ES",
-      });
-    expect(response.statusCode).toEqual(201);
-    expect(response.body.data).toEqual(
-      expect.objectContaining({
-        client: expect.objectContaining({
-          id: expect.any(String),
-          name: "JOHN DOE LTDA",
-          email: "johndoe@example.com",
-          cpfCnpj: "83906381000108",
-        }),
-      })
-    );
-  });
-
-  it("should be not able to create user with same cpf/cnpj", async () => {
-    const cookies = await geraCookies();
-    await prisma.client.create({
+    const client = await prisma.client.create({
       data: {
-        name: "John doe ltda",
-        cpfCnpj: "83906381000108",
+        name: "JOHN DOE CLIENT",
+        cpfCnpj: "47022391041",
         phone: "27997876754",
         email: "johndoe@example.com",
         address: "Rua nova, numero 2, Vitoria-ES",
       },
     });
+
     const response = await request(application.server)
-      .post("/api/v1/clients")
+      .post("/api/v1/vehicles")
       .set("Cookie", cookies)
       .send({
-        name: "John doe ltda",
-        cpfCnpj: "83.906.381/0001-08",
+        plate: "PPW-1020",
+        model: "Argo",
+        brand: "Fiat",
+        kilometers: 10000,
+        year: 2017,
+        clientId: client.id,
+      });
+    expect(response.statusCode).toEqual(201);
+    expect(response.body.data).toEqual(
+      expect.objectContaining({
+        vehicle: expect.objectContaining({
+          id: expect.any(String),
+          plate: "PPW1020",
+          model: "ARGO",
+          brand: "FIAT",
+          kilometers: 10000,
+          year: 2017,
+          clientId: client.id,
+        }),
+      })
+    );
+  });
+
+  it("should not be able to create a vehicle with invalid client", async () => {
+    const cookies = await geraCookies();
+
+    const response = await request(application.server)
+      .post("/api/v1/vehicles")
+      .set("Cookie", cookies)
+      .send({
+        plate: "PPW-1020",
+        model: "Argo",
+        brand: "Fiat",
+        kilometers: 10000,
+        year: 2017,
+        clientId: "invalid-id",
+      });
+
+    expect(response.statusCode).toEqual(400); // erro de retorno
+  });
+
+  it("should be not able to create vehicle with same plate", async () => {
+    const cookies = await geraCookies();
+
+    const client = await prisma.client.create({
+      data: {
+        name: "JOHN DOE CLIENT",
+        cpfCnpj: "47022391041",
         phone: "27997876754",
         email: "johndoe@example.com",
         address: "Rua nova, numero 2, Vitoria-ES",
+      },
+    });
+
+    await prisma.vehicle.create({
+      data: {
+        plate: "PPW1020",
+        model: "ARGO",
+        brand: "FIAT",
+        kilometers: 10000,
+        year: 2017,
+        clientId: client.id,
+      },
+    });
+
+    const response = await request(application.server)
+      .post("/api/v1/vehicles")
+      .set("Cookie", cookies)
+      .send({
+        plate: "PPW-1020",
+        model: "Argo",
+        brand: "Fiat",
+        kilometers: 10000,
+        year: 2017,
+        clientId: client.id,
       });
     expect(response.statusCode).toEqual(409); // erro de retorno
   });

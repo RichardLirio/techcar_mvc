@@ -101,7 +101,7 @@ describe("Create Client Controller (e2e)", async () => {
     );
   });
 
-  it("should be not able to create user with same cpf/cnpj", async () => {
+  it("should be not able to create client with same cpf/cnpj", async () => {
     const cookies = await geraCookies();
     await prisma.client.create({
       data: {
