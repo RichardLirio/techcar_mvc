@@ -51,24 +51,7 @@ export class UsersController {
     return reply.status(201).send(response);
   }
 
-  async deleteById(request: FastifyRequest, reply: FastifyReply) {
-    const { id } = idParamSchema.parse(request.params) as IdParam;
-
-    // Deleta Usuario
-    const user = await prisma.user.delete({
-      where: {
-        id,
-      },
-    });
-
-    if (!user) {
-      throw new HttpError("Usuário não existe", 400);
-    }
-
-    return reply.status(204).send();
-  }
-
-  async fetch(_: FastifyRequest, reply: FastifyReply) {
+  async findAll(_: FastifyRequest, reply: FastifyReply) {
     const users = await prisma.user.findMany({
       select: {
         id: true,
@@ -77,6 +60,9 @@ export class UsersController {
         role: true,
         createdAt: true,
         updatedAt: true,
+      },
+      orderBy: {
+        createdAt: "desc",
       },
     });
 
@@ -89,7 +75,7 @@ export class UsersController {
     return reply.status(200).send(response);
   }
 
-  async getById(request: FastifyRequest, reply: FastifyReply) {
+  async findOne(request: FastifyRequest, reply: FastifyReply) {
     const { id } = idParamSchema.parse(request.params) as IdParam;
 
     const user = await prisma.user.findUnique({
@@ -107,12 +93,12 @@ export class UsersController {
     });
 
     if (!user) {
-      throw new HttpError("Usuário não existe", 400);
+      throw new HttpError("Usuário não encontrado", 400);
     }
 
     const response: SuccessResponse = {
       success: true,
-      message: "Dados do usuário recuperado com sucesso",
+      message: "Dados do usuário obtidos com sucesso",
       data: { user },
     };
 
@@ -130,7 +116,7 @@ export class UsersController {
     });
 
     if (!user) {
-      throw new HttpError("Usuário não existe", 400);
+      throw new HttpError("Usuário não encontrado", 400);
     }
 
     if (data.email && data.email !== user.email) {
@@ -181,5 +167,28 @@ export class UsersController {
     };
 
     return reply.status(200).send(response);
+  }
+
+  async delete(request: FastifyRequest, reply: FastifyReply) {
+    const { id } = idParamSchema.parse(request.params) as IdParam;
+
+    // Deleta Usuario
+    const user = await prisma.user.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!user) {
+      throw new HttpError("Usuário não encontrado", 400);
+    }
+
+    await prisma.user.delete({
+      where: {
+        id,
+      },
+    });
+
+    return reply.status(204).send();
   }
 }
