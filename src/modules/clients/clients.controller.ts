@@ -84,7 +84,7 @@ export class ClientController {
     });
 
     if (!client) {
-      throw new HttpError("Cliente não encontrado", 400);
+      throw new HttpError("Cliente não encontrado", 404);
     }
 
     const response: SuccessResponse = {
@@ -107,7 +107,7 @@ export class ClientController {
     });
 
     if (!existingClient) {
-      throw new HttpError("Cliente não encontrado", 400);
+      throw new HttpError("Cliente não encontrado", 404);
     }
 
     // Verificar se o CPF/CNPJ já está em uso por outro cliente
@@ -151,7 +151,7 @@ export class ClientController {
     });
 
     if (!existingClient) {
-      throw new HttpError("Cliente não encontrado", 400);
+      throw new HttpError("Cliente não encontrado", 404);
     }
 
     // Verificar se o cliente possui ordens de serviço
@@ -162,7 +162,7 @@ export class ClientController {
     if (ordersCount > 0) {
       throw new HttpError(
         "Não é possível deletar cliente com ordens de serviço cadastradas",
-        400
+        409
       );
     }
 

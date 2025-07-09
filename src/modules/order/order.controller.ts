@@ -20,7 +20,7 @@ export class OrderController {
     });
 
     if (!clientExists) {
-      throw new HttpError("Cliente não encontrado", 400);
+      throw new HttpError("Cliente não encontrado", 404);
     }
 
     // Verificar se o veículo existe e pertence ao cliente
@@ -31,7 +31,7 @@ export class OrderController {
     if (!vehicleExists || vehicleExists.clientId !== data.clientId) {
       throw new HttpError(
         "Veículo não encontrado ou não pertence ao cliente",
-        400
+        409
       );
     }
 
@@ -42,13 +42,13 @@ export class OrderController {
       });
 
       if (!part) {
-        throw new HttpError(`Peça não encontrada: ${item.partId}`, 400);
+        throw new HttpError(`Peça não encontrada: ${item.partId}`, 404);
       }
 
       if (part.quantity < item.quantity) {
         throw new HttpError(
           `Quantidade insuficiente em estoque para a peça ${part.name}. Disponível: ${part.quantity}, Solicitado: ${item.quantity}`,
-          400
+          409
         );
       }
     }
@@ -273,7 +273,7 @@ export class OrderController {
     });
 
     if (!existingOrder) {
-      throw new HttpError("Ordem de serviço não encontrada", 400);
+      throw new HttpError("Ordem de serviço não encontrada", 404);
     }
 
     // Verificar se apenas admin pode aplicar descontos
@@ -296,7 +296,7 @@ export class OrderController {
       });
 
       if (!clientExists) {
-        throw new HttpError("Cliente não encontrado", 400);
+        throw new HttpError("Cliente não encontrado", 404);
       }
     }
 
@@ -307,13 +307,13 @@ export class OrderController {
       });
 
       if (!vehicleExists) {
-        throw new HttpError("Veículo não encontrado", 400);
+        throw new HttpError("Veículo não encontrado", 404);
       }
 
       // Verificar se o veículo pertence ao cliente
       const finalClientId = data.clientId || existingOrder.clientId;
       if (vehicleExists.clientId !== finalClientId) {
-        throw new HttpError("Veículo não pertence ao cliente", 400);
+        throw new HttpError("Veículo não pertence ao cliente", 409);
       }
     }
 
@@ -364,13 +364,13 @@ export class OrderController {
           });
 
           if (!part) {
-            throw new HttpError(`Peça não encontrada: ${item.partId}`, 400);
+            throw new HttpError(`Peça não encontrada: ${item.partId}`, 404);
           }
 
           if (part.quantity < item.quantity) {
             throw new HttpError(
               `Quantidade insuficiente em estoque para a peça ${part.name}. Disponível: ${part.quantity}, Solicitado: ${item.quantity}`,
-              400
+              409
             );
           }
         }
@@ -498,7 +498,7 @@ export class OrderController {
     if (existingOrder.status === "COMPLETED") {
       throw new HttpError(
         "Não é possível deletar uma ordem de serviço concluída",
-        400
+        409
       );
     }
 

@@ -84,7 +84,7 @@ export class PartController {
     });
 
     if (!part) {
-      throw new HttpError("Peça não encontrada", 400);
+      throw new HttpError("Peça não encontrada", 404);
     }
 
     const response: SuccessResponse = {
@@ -106,7 +106,7 @@ export class PartController {
     });
 
     if (!existingPart) {
-      throw new HttpError("Peça não encontrada", 400);
+      throw new HttpError("Peça não encontrada", 404);
     }
 
     // Atualizar peça
@@ -133,7 +133,7 @@ export class PartController {
     });
 
     if (!existingPart) {
-      throw new HttpError("Peça não encontrada", 400);
+      throw new HttpError("Peça não encontrada", 404);
     }
 
     // Verificar se a peça está sendo usada em ordens de serviço
@@ -144,7 +144,7 @@ export class PartController {
     if (orderItemsCount > 0) {
       throw new HttpError(
         "Não é possível deletar peça que está sendo usada em ordens de serviço",
-        400
+        409
       );
     }
 
@@ -173,7 +173,7 @@ export class PartController {
     });
 
     if (!existingPart) {
-      throw new HttpError("Peça não encontrada", 400);
+      throw new HttpError("Peça não encontrada", 404);
     }
 
     // Atualizar estoque

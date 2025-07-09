@@ -82,6 +82,6 @@ describe("Get Client Controller (e2e)", async () => {
       .get(`/api/v1/clients/invalid-id`) // buscar pelo id do usuario
       .set("Cookie", cookies);
 
-    expect(response.statusCode).toEqual(400);
+    expect(response.statusCode).toEqual(404);
   });
 });

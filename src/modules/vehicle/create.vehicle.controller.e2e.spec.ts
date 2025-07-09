@@ -105,7 +105,7 @@ describe("Create Vehicle Controller (e2e)", async () => {
         clientId: "invalid-id",
       });
 
-    expect(response.statusCode).toEqual(400); // erro de retorno
+    expect(response.statusCode).toEqual(404); // erro de retorno
   });
 
   it("should be not able to create vehicle with same plate", async () => {

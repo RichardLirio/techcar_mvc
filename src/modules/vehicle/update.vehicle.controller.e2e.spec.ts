@@ -113,7 +113,7 @@ describe("Update Vehicle Controller (e2e)", async () => {
         year: 2019,
       });
 
-    expect(response.statusCode).toEqual(400);
+    expect(response.statusCode).toEqual(404);
   });
 
   it("should not to be able to update vehicle data with invalid client id", async () => {
@@ -152,7 +152,7 @@ describe("Update Vehicle Controller (e2e)", async () => {
         clientId: "invalid-id",
       });
 
-    expect(response.statusCode).toEqual(400);
+    expect(response.statusCode).toEqual(404);
   });
 
   it("should not be able to update vehicle with plate already exists", async () => {

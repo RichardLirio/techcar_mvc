@@ -20,7 +20,7 @@ export class VehicleController {
     });
 
     if (!clientExists) {
-      throw new HttpError("Cliente não encontrado", 400);
+      throw new HttpError("Cliente não encontrado", 404);
     }
 
     // Verificar se a placa já existe
@@ -106,7 +106,7 @@ export class VehicleController {
     });
 
     if (!vehicle) {
-      throw new HttpError("Veículo não encontrado", 400);
+      throw new HttpError("Veículo não encontrado", 404);
     }
 
     const response: SuccessResponse = {
@@ -128,7 +128,7 @@ export class VehicleController {
     });
 
     if (!existingVehicle) {
-      throw new HttpError("Veículo não encontrado", 400);
+      throw new HttpError("Veículo não encontrado", 404);
     }
 
     // Verificar se o cliente existe
@@ -138,7 +138,7 @@ export class VehicleController {
       });
 
       if (!clientExists) {
-        throw new HttpError("Cliente não encontrado", 400);
+        throw new HttpError("Cliente não encontrado", 404);
       }
     }
 
@@ -186,7 +186,7 @@ export class VehicleController {
     });
 
     if (!existingVehicle) {
-      throw new HttpError("Veículo não encontrado", 400);
+      throw new HttpError("Veículo não encontrado", 404);
     }
 
     // Verificar se o veículo possui ordens de serviço
@@ -197,7 +197,7 @@ export class VehicleController {
     if (ordersCount > 0) {
       throw new HttpError(
         "Não é possível deletar veículo com ordens de serviço cadastradas",
-        400
+        409
       );
     }
 

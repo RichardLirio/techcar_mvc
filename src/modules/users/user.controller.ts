@@ -93,7 +93,7 @@ export class UsersController {
     });
 
     if (!user) {
-      throw new HttpError("Usuário não encontrado", 400);
+      throw new HttpError("Usuário não encontrado", 404);
     }
 
     const response: SuccessResponse = {
@@ -116,7 +116,7 @@ export class UsersController {
     });
 
     if (!user) {
-      throw new HttpError("Usuário não encontrado", 400);
+      throw new HttpError("Usuário não encontrado", 404);
     }
 
     if (data.email && data.email !== user.email) {
@@ -127,7 +127,7 @@ export class UsersController {
       });
 
       if (userWithSameEmail) {
-        throw new HttpError("Email já está em uso", 400);
+        throw new HttpError("Email já está em uso", 409);
       }
 
       user.email = data.email;
@@ -180,7 +180,7 @@ export class UsersController {
     });
 
     if (!user) {
-      throw new HttpError("Usuário não encontrado", 400);
+      throw new HttpError("Usuário não encontrado", 404);
     }
 
     await prisma.user.delete({

@@ -94,6 +94,6 @@ describe("Update Part Controller (e2e)", async () => {
         year: 2019,
       });
 
-    expect(response.statusCode).toEqual(400);
+    expect(response.statusCode).toEqual(404);
   });
 });

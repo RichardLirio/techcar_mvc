@@ -77,6 +77,6 @@ describe("Get User Controller (e2e)", async () => {
       .get(`/api/v1/users/invalid-id`) // buscar pelo id do usuario
       .set("Cookie", cookies);
 
-    expect(response.statusCode).toEqual(400);
+    expect(response.statusCode).toEqual(404);
   });
 });
