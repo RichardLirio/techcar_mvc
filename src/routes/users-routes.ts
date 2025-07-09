@@ -16,19 +16,19 @@ export async function usersRoutes(app: FastifyInstance) {
   app.delete(
     "/:id",
     { onRequest: [VerifyJWT, VerifyUserRole("ADMIN")] },
-    usersController.deleteById
+    usersController.delete
   );
 
   app.get(
     "/",
     { onRequest: [VerifyJWT, VerifyUserRole("ADMIN")] },
-    usersController.fetch
+    usersController.findAll
   );
 
   app.get(
     "/:id",
     { onRequest: [VerifyJWT, VerifyUserRole("ADMIN")] },
-    usersController.getById
+    usersController.findOne
   );
 
   app.patch(

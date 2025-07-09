@@ -5,6 +5,7 @@ import { ZodError } from "zod";
 import { authRoutes } from "./routes/auth-routes";
 import { ErrorResponse, SuccessResponse } from "./@types/response";
 import { usersRoutes } from "./routes/users-routes";
+import { clientsRoutes } from "./routes/clients-routes";
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = fastify({
@@ -98,6 +99,7 @@ async function registerRoutes(app: FastifyInstance) {
   // Rotas da API
   await app.register(authRoutes, { prefix: `${prefix}` });
   await app.register(usersRoutes, { prefix: `${prefix}/users` });
+  await app.register(clientsRoutes, { prefix: `${prefix}/clients` });
 }
 
 function setupErrorHandling(app: FastifyInstance) {

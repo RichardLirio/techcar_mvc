@@ -6,7 +6,7 @@ import { FastifyInstance } from "fastify";
 import { prisma } from "@/lib/database";
 import { hashPassword } from "@/utils/hash-password";
 
-describe("Get User Controller (e2e)", async () => {
+describe("Get Client Controller (e2e)", async () => {
   let application: FastifyInstance;
   beforeAll(async () => {
     application = await buildApp();
@@ -44,27 +44,32 @@ describe("Get User Controller (e2e)", async () => {
     return cookies;
   }
 
-  it("should be able to get user profile", async () => {
+  it("should be able to get client data", async () => {
     const cookies = await geraCookies();
-    const user = await prisma.user.create({
+    const client = await prisma.client.create({
       data: {
-        name: "John doe",
+        name: "John doe client",
+        cpfCnpj: "470.223.910-41",
+        phone: "27997876754",
         email: "johndoe@example.com",
-        password: "123456",
+        address: "Rua nova, numero 2, Vitoria-ES",
       },
     });
 
     const response = await request(application.server)
-      .get(`/api/v1/users/${user.id}`) // buscar pelo id do usuario
+      .get(`/api/v1/clients/${client.id}`) // buscar pelo id do cliente
       .set("Cookie", cookies);
 
     expect(response.statusCode).toEqual(200);
     expect(response.body.data).toEqual(
       expect.objectContaining({
-        user: expect.objectContaining({
+        client: expect.objectContaining({
           id: expect.any(String),
-          name: "John doe",
+          name: "John doe client",
+          cpfCnpj: "470.223.910-41",
+          phone: "27997876754",
           email: "johndoe@example.com",
+          address: "Rua nova, numero 2, Vitoria-ES",
         }),
       })
     );

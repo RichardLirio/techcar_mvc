@@ -59,5 +59,11 @@ describe("Delete User Controller (e2e)", async () => {
       .delete(`/api/v1/users/${user.id}`) //pelo id do usuario
       .set("Cookie", cookies);
     expect(response.statusCode).toEqual(204);
+
+    const userExist = await prisma.user.findUnique({
+      where: { id: user.id },
+    });
+
+    expect(userExist).toBeNull();
   });
 });

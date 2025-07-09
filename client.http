@@ -1,5 +1,5 @@
 @baseUrl = http://localhost:3333
-@userId = cmcv7vxcp0000sdq0mn3qn0bq
+@userId = cmcuip5t900007f48yuu79x2r
 
 # @name Create_user
 POST {{baseUrl}}/api/v1/register

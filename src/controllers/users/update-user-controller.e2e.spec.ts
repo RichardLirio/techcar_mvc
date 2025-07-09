@@ -63,5 +63,14 @@ describe("Update User Controller (e2e)", async () => {
         password: "789654",
       });
     expect(response.statusCode).toEqual(200);
+    expect(response.body.data).toEqual(
+      expect.objectContaining({
+        userUpdated: expect.objectContaining({
+          id: expect.any(String),
+          name: "John Doe updated",
+          email: "johndoeupdated@example.com",
+        }),
+      })
+    );
   });
 });
