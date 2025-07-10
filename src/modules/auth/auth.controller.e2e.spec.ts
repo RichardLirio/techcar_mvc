@@ -3,8 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { cleanupTestDatabase, setupTestDatabase } from "test/e2e-setup";
 import { buildApp } from "@/app";
 import { FastifyInstance } from "fastify";
-import { prisma } from "@/lib/database";
-import { hashPassword } from "@/utils/hash-password";
+import { CreateUserForTests } from "test/factories/create-users-for-tests";
 
 describe("Authenticate User (e2e)", async () => {
   let application: FastifyInstance;
@@ -13,13 +12,7 @@ describe("Authenticate User (e2e)", async () => {
     application = await buildApp();
     application.ready();
     await setupTestDatabase();
-    await prisma.user.create({
-      data: {
-        name: "John Doe",
-        email: "johndoe@example.com",
-        password: await hashPassword("123456"),
-      },
-    });
+    await CreateUserForTests();
   });
 
   afterAll(async () => {
@@ -31,7 +24,7 @@ describe("Authenticate User (e2e)", async () => {
     const response = await request(application.server)
       .post("/api/v1/login")
       .send({
-        email: "johndoe@example.com",
+        email: "admin@admin.com",
         password: "123456",
       });
     expect(response.statusCode).toEqual(200);
@@ -56,7 +49,7 @@ describe("Authenticate User (e2e)", async () => {
     const response = await request(application.server)
       .post("/api/v1/login")
       .send({
-        email: "johndoe@example.com",
+        email: "admin@admin.com",
         password: "123458",
       });
     expect(response.statusCode).toEqual(401);
@@ -68,7 +61,7 @@ describe("Authenticate User (e2e)", async () => {
     const loginResponse = await request(application.server)
       .post("/api/v1/login")
       .send({
-        email: "johndoe@example.com",
+        email: "admin@admin.com",
         password: "123456",
       });
 
