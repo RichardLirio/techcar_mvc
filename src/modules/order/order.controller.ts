@@ -492,7 +492,6 @@ export class OrderController {
     if (!existingOrder) {
       throw new HttpError("Ordem de serviço não encontrada", 404);
     }
-    // TODO: 404 PARA NOT FOUND ERROR
 
     // Verificar se a ordem pode ser deletada (apenas ordens em progresso)
     if (existingOrder.status === "COMPLETED") {
