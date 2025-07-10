@@ -4,7 +4,8 @@ import { cleanupTestDatabase, setupTestDatabase } from "test/e2e-setup";
 import { buildApp } from "@/app";
 import { FastifyInstance } from "fastify";
 import { prisma } from "@/lib/database";
-import { hashPassword } from "@/utils/hash-password";
+import { CreateUserForTests } from "test/factories/create-users-for-tests";
+import { geraCookies } from "test/factories/return-auth-cookies";
 
 describe("Create Vehicle Controller (e2e)", async () => {
   let application: FastifyInstance;
@@ -13,14 +14,7 @@ describe("Create Vehicle Controller (e2e)", async () => {
     application = await buildApp();
     application.ready();
     await setupTestDatabase();
-    await prisma.user.create({
-      data: {
-        name: "Admin User",
-        email: "admin@admin.com",
-        password: await hashPassword("123456"),
-        role: "ADMIN",
-      },
-    });
+    await CreateUserForTests();
   });
 
   afterAll(async () => {
@@ -33,25 +27,8 @@ describe("Create Vehicle Controller (e2e)", async () => {
     await prisma.$executeRaw`TRUNCATE TABLE "clients" CASCADE`;
   });
 
-  async function geraCookies() {
-    const loginResponse = await request(application.server)
-      .post("/api/v1/login")
-      .send({
-        email: "admin@admin.com",
-        password: "123456",
-      });
-
-    const cookies = loginResponse.headers["set-cookie"];
-
-    if (!cookies) {
-      throw new Error("Cookie não encontrado após login");
-    }
-
-    return cookies;
-  }
-
   it("should be able to create a vehicle", async () => {
-    const cookies = await geraCookies();
+    const cookies = await geraCookies("ADMIN", application);
 
     const client = await prisma.client.create({
       data: {
@@ -91,7 +68,7 @@ describe("Create Vehicle Controller (e2e)", async () => {
   });
 
   it("should not be able to create a vehicle with invalid client", async () => {
-    const cookies = await geraCookies();
+    const cookies = await geraCookies("ADMIN", application);
 
     const response = await request(application.server)
       .post("/api/v1/vehicles")
@@ -109,7 +86,7 @@ describe("Create Vehicle Controller (e2e)", async () => {
   });
 
   it("should be not able to create vehicle with same plate", async () => {
-    const cookies = await geraCookies();
+    const cookies = await geraCookies("ADMIN", application);
 
     const client = await prisma.client.create({
       data: {

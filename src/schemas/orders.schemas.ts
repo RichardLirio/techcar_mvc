@@ -37,7 +37,7 @@ export const updateOrderSchema = z.object({
   clientId: z.string().min(1, "Cliente é obrigatório").optional(),
   vehicleId: z.string().min(1, "Veículo é obrigatório").optional(),
   description: z.string().toUpperCase().optional(),
-  kilometers: z.number().min(1, "Quilometragem é obrigatória"),
+  kilometers: z.number().min(1, "Quilometragem é obrigatória").optional(),
   discount: z
     .number()
     .min(0, "Desconto deve ser maior ou igual a 0")

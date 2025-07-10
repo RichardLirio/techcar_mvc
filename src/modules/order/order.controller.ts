@@ -14,6 +14,8 @@ export class OrderController {
   async create(request: FastifyRequest, reply: FastifyReply) {
     const data = createOrderSchema.parse(request.body) as CreateOrderInput;
 
+    const user = request.user;
+
     // Verificar se o cliente existe
     const clientExists = await prisma.client.findUnique({
       where: { id: data.clientId },
@@ -49,6 +51,16 @@ export class OrderController {
         throw new HttpError(
           `Quantidade insuficiente em estoque para a peça ${part.name}. Disponível: ${part.quantity}, Solicitado: ${item.quantity}`,
           409
+        );
+      }
+    }
+
+    // Verificar se apenas admin pode aplicar descontos
+    if (data.discount !== undefined && data.discount > 0) {
+      if (user.role !== "ADMIN") {
+        throw new HttpError(
+          "Apenas administradores podem aplicar descontos",
+          403
         );
       }
     }
@@ -426,6 +438,9 @@ export class OrderController {
           discount: data.discount,
           status: data.status,
           totalValue: totalValue,
+          kilometers: data.kilometers
+            ? data.kilometers
+            : existingOrder.kilometers,
         },
       });
 
@@ -492,7 +507,6 @@ export class OrderController {
     if (!existingOrder) {
       throw new HttpError("Ordem de serviço não encontrada", 404);
     }
-    // TODO: 404 PARA NOT FOUND ERROR
 
     // Verificar se a ordem pode ser deletada (apenas ordens em progresso)
     if (existingOrder.status === "COMPLETED") {
@@ -629,7 +643,7 @@ export class OrderController {
 
     const response: SuccessResponse = {
       success: true,
-      message: "Ordens de serviço obtidas com sucesso",
+      message: `Ordens de serviço do cliente obtidas com sucesso`,
       data: { orders },
     };
 
@@ -637,7 +651,7 @@ export class OrderController {
   }
 
   async getOrdersByVehicle(request: FastifyRequest, reply: FastifyReply) {
-    const { vehicleId } = request.params as { vehicleId: string };
+    const { vehicleId } = request.query as { vehicleId: string };
 
     const orders = await prisma.order.findMany({
       where: { vehicleId },
@@ -668,7 +682,7 @@ export class OrderController {
 
     const response: SuccessResponse = {
       success: true,
-      message: "Ordens de serviço obtidas com sucesso",
+      message: "Ordens de serviço do veículo obtidas com sucesso",
       data: { orders },
     };
 
