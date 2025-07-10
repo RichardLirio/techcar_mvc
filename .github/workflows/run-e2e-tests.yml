@@ -31,3 +31,8 @@ jobs:
         env:
           JWT_SECRET: "testing"
           DATABASE_URL: "postgresql://docker:docker@localhost:5432/mydb?schema=public"
+          CORS_ORIGINS: "http://localhost:3333"
+          APP_VERSION: "1.0.0"
+          RATE_LIMIT_MAX: 100
+          ADMIN_USER_EMAIL: "admin@example.com"
+          ADMIN_USER_PASSWORD: "@a12345"
