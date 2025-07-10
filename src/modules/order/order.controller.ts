@@ -643,7 +643,7 @@ export class OrderController {
 
     const response: SuccessResponse = {
       success: true,
-      message: "Ordens de serviço obtidas com sucesso",
+      message: `Ordens de serviço do cliente obtidas com sucesso`,
       data: { orders },
     };
 
@@ -651,7 +651,7 @@ export class OrderController {
   }
 
   async getOrdersByVehicle(request: FastifyRequest, reply: FastifyReply) {
-    const { vehicleId } = request.params as { vehicleId: string };
+    const { vehicleId } = request.query as { vehicleId: string };
 
     const orders = await prisma.order.findMany({
       where: { vehicleId },
@@ -682,7 +682,7 @@ export class OrderController {
 
     const response: SuccessResponse = {
       success: true,
-      message: "Ordens de serviço obtidas com sucesso",
+      message: "Ordens de serviço do veículo obtidas com sucesso",
       data: { orders },
     };
 

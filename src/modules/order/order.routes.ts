@@ -21,4 +21,16 @@ export async function ordersRoutes(app: FastifyInstance) {
     { onRequest: [VerifyJWT] },
     ordersController.updateStatus
   );
+
+  app.get(
+    "/client/:clientId",
+    { onRequest: [VerifyJWT] },
+    ordersController.getOrdersByClient
+  );
+
+  app.get(
+    "/vehicle/:vehicleId",
+    { onRequest: [VerifyJWT] },
+    ordersController.getOrdersByVehicle
+  );
 }
