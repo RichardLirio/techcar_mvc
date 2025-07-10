@@ -4,7 +4,8 @@ import { cleanupTestDatabase, setupTestDatabase } from "test/e2e-setup";
 import { buildApp } from "@/app";
 import { FastifyInstance } from "fastify";
 import { prisma } from "@/lib/database";
-import { hashPassword } from "@/utils/hash-password";
+import { CreateUserForTests } from "test/factories/create-users-for-tests";
+import { geraCookies } from "test/factories/return-auth-cookies";
 
 describe("Create Order Controller (e2e)", async () => {
   let application: FastifyInstance;
@@ -13,23 +14,7 @@ describe("Create Order Controller (e2e)", async () => {
     application = await buildApp();
     application.ready();
     await setupTestDatabase();
-    await prisma.user.create({
-      data: {
-        name: "Admin User",
-        email: "admin@admin.com",
-        password: await hashPassword("123456"),
-        role: "ADMIN",
-      },
-    });
-
-    await prisma.user.create({
-      data: {
-        name: "User",
-        email: "user@user.com",
-        password: await hashPassword("123456"),
-        role: "USER",
-      },
-    });
+    await CreateUserForTests();
   });
 
   afterAll(async () => {
@@ -42,42 +27,8 @@ describe("Create Order Controller (e2e)", async () => {
     await prisma.$executeRaw`TRUNCATE TABLE "clients" CASCADE`;
   });
 
-  async function geraCookies(role: "USER" | "ADMIN") {
-    if (role == "ADMIN") {
-      const loginResponse = await request(application.server)
-        .post("/api/v1/login")
-        .send({
-          email: "admin@admin.com",
-          password: "123456",
-        });
-
-      const cookies = loginResponse.headers["set-cookie"];
-
-      if (!cookies) {
-        throw new Error("Cookie não encontrado após login");
-      }
-
-      return cookies;
-    }
-
-    const loginResponse = await request(application.server)
-      .post("/api/v1/login")
-      .send({
-        email: "user@user.com",
-        password: "123456",
-      });
-
-    const cookies = loginResponse.headers["set-cookie"];
-
-    if (!cookies) {
-      throw new Error("Cookie não encontrado após login");
-    }
-
-    return cookies;
-  }
-
   it("should be able to create a order service", async () => {
-    const cookies = await geraCookies("ADMIN");
+    const cookies = await geraCookies("ADMIN", application);
 
     const client = await prisma.client.create({
       data: {
@@ -144,7 +95,7 @@ describe("Create Order Controller (e2e)", async () => {
   });
 
   it("should not be able to create a order service with invalid client ID", async () => {
-    const cookies = await geraCookies("ADMIN");
+    const cookies = await geraCookies("ADMIN", application);
 
     const part = await prisma.part.create({
       data: {
@@ -178,7 +129,7 @@ describe("Create Order Controller (e2e)", async () => {
   });
 
   it("should not be able to create a order service with invalid vehicle ID", async () => {
-    const cookies = await geraCookies("ADMIN");
+    const cookies = await geraCookies("ADMIN", application);
 
     const client = await prisma.client.create({
       data: {
@@ -247,7 +198,7 @@ describe("Create Order Controller (e2e)", async () => {
   });
 
   it("should not be possible to create an ordering service with insufficient parts in stock", async () => {
-    const cookies = await geraCookies("ADMIN");
+    const cookies = await geraCookies("ADMIN", application);
 
     const client = await prisma.client.create({
       data: {
@@ -305,7 +256,7 @@ describe("Create Order Controller (e2e)", async () => {
   });
 
   it("shouldn't be possible to create a discounted ordering service without being an admin user", async () => {
-    const cookies = await geraCookies("USER");
+    const cookies = await geraCookies("USER", application);
 
     const client = await prisma.client.create({
       data: {
@@ -364,7 +315,7 @@ describe("Create Order Controller (e2e)", async () => {
   });
 
   it("should be possible to create a discounted ordering service being an admin user", async () => {
-    const cookies = await geraCookies("ADMIN");
+    const cookies = await geraCookies("ADMIN", application);
 
     const client = await prisma.client.create({
       data: {
