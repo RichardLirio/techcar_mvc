@@ -15,4 +15,10 @@ export async function ordersRoutes(app: FastifyInstance) {
   app.get("/:id", { onRequest: [VerifyJWT] }, ordersController.findOne);
 
   app.patch("/:id", { onRequest: [VerifyJWT] }, ordersController.update);
+
+  app.patch(
+    "/status/:id",
+    { onRequest: [VerifyJWT] },
+    ordersController.updateStatus
+  );
 }
