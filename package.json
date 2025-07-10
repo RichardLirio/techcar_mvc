@@ -20,8 +20,7 @@
     "test": "vitest run --config vitest.config.mts",
     "test:watch": "vitest watch --config vitest.config.mts",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage",
-    "test:order": "vitest run --config vitest.config.order.mts"
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [
     "fastify",
