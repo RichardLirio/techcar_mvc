@@ -127,7 +127,6 @@ describe("Create Order Controller (e2e)", async () => {
       });
 
     expect(response.statusCode).toEqual(201);
-
     expect(response.body.data).toEqual(
       expect.objectContaining({
         completeOrder: expect.objectContaining({

@@ -1,0 +1,526 @@
+import request from "supertest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { cleanupTestDatabase, setupTestDatabase } from "test/e2e-setup";
+import { buildApp } from "@/app";
+import { FastifyInstance } from "fastify";
+import { prisma } from "@/lib/database";
+import { hashPassword } from "@/utils/hash-password";
+
+describe("Update Order Controller (e2e)", async () => {
+  let application: FastifyInstance;
+
+  beforeAll(async () => {
+    application = await buildApp();
+    application.ready();
+    await setupTestDatabase();
+    await prisma.user.create({
+      data: {
+        name: "Admin User",
+        email: "admin@admin.com",
+        password: await hashPassword("123456"),
+        role: "ADMIN",
+      },
+    });
+
+    await prisma.user.create({
+      data: {
+        name: "User",
+        email: "user@user.com",
+        password: await hashPassword("123456"),
+        role: "USER",
+      },
+    });
+  });
+
+  afterAll(async () => {
+    await application.close();
+    await cleanupTestDatabase();
+  });
+
+  afterEach(async () => {
+    await prisma.$executeRaw`TRUNCATE TABLE "vehicles" CASCADE`;
+    await prisma.$executeRaw`TRUNCATE TABLE "clients" CASCADE`;
+  });
+
+  async function geraCookies(role: "USER" | "ADMIN") {
+    if (role == "ADMIN") {
+      const loginResponse = await request(application.server)
+        .post("/api/v1/login")
+        .send({
+          email: "admin@admin.com",
+          password: "123456",
+        });
+
+      const cookies = loginResponse.headers["set-cookie"];
+
+      if (!cookies) {
+        throw new Error("Cookie não encontrado após login");
+      }
+
+      return cookies;
+    }
+
+    const loginResponse = await request(application.server)
+      .post("/api/v1/login")
+      .send({
+        email: "user@user.com",
+        password: "123456",
+      });
+
+    const cookies = loginResponse.headers["set-cookie"];
+
+    if (!cookies) {
+      throw new Error("Cookie não encontrado após login");
+    }
+
+    return cookies;
+  }
+
+  async function geraOrder() {
+    const client = await prisma.client.create({
+      data: {
+        name: "JOHN DOE CLIENT",
+        cpfCnpj: "47022391041",
+        phone: "27997876754",
+        email: "johndoe@example.com",
+        address: "Rua nova, numero 2, Vitoria-ES",
+      },
+    });
+
+    const vehicle = await prisma.vehicle.create({
+      data: {
+        plate: "PPW1020",
+        model: "ARGO",
+        brand: "FIAT",
+        kilometers: 45000,
+        year: 2018,
+        clientId: client.id,
+      },
+    });
+
+    const part = await prisma.part.create({
+      data: {
+        name: "FILTRO COMBUSTIVEL",
+        quantity: 10,
+        description: "FILTRO COMBUSTIVEL DO ARGO 2018",
+        unitPrice: 50.2,
+      },
+    });
+    const services = [
+      { description: "troca de oleo", price: 30 },
+      { description: "troca de filtro", price: 40 },
+    ];
+
+    const items = [
+      { partId: part.id, quantity: 2, unitPrice: Number(part.unitPrice) },
+    ];
+
+    const order = await prisma.$transaction(async (tx) => {
+      // Criar ordem
+      const newOrder = await tx.order.create({
+        data: {
+          clientId: client.id,
+          vehicleId: vehicle.id,
+          description: "MANUTENÇÃO CORRETIVA",
+          kilometers: 45000,
+          discount: 0,
+          totalValue: 170.4,
+          status: "IN_PROGRESS",
+        },
+      });
+
+      // Criar serviços
+      if (services.length > 0) {
+        await tx.service.createMany({
+          data: services.map((service) => ({
+            orderId: newOrder.id,
+            description: service.description,
+            price: service.price,
+          })),
+        });
+      }
+
+      // Criar itens e atualizar estoque
+      if (items.length > 0) {
+        await tx.orderItem.createMany({
+          data: items.map((item) => ({
+            orderId: newOrder.id,
+            partId: item.partId,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+          })),
+        });
+
+        // Atualizar estoque
+        for (const item of items) {
+          await tx.part.update({
+            where: { id: item.partId },
+            data: {
+              quantity: {
+                decrement: item.quantity,
+              },
+            },
+          });
+        }
+      }
+
+      return newOrder;
+    });
+
+    return order;
+  }
+
+  it("should be able to update a order service", async () => {
+    const cookies = await geraCookies("ADMIN");
+
+    const client = await prisma.client.create({
+      data: {
+        name: "JOHN DOE LTDA",
+        cpfCnpj: "33872166000157",
+        phone: "27997876754",
+        email: "johndoe@example.com",
+        address: "Rua nova, numero 2, Vitoria-ES",
+      },
+    });
+
+    const vehicle = await prisma.vehicle.create({
+      data: {
+        plate: "PPW1025",
+        model: "ARGO",
+        brand: "FIAT",
+        kilometers: 3000,
+        year: 2018,
+        clientId: client.id,
+      },
+    });
+
+    const part = await prisma.part.create({
+      data: {
+        name: "FILTRO DO AR",
+        quantity: 10,
+        description: "FILTRO DO AR DO ARGO 2018",
+        unitPrice: 10,
+      },
+    });
+
+    const order = await geraOrder();
+
+    const response = await request(application.server)
+      .patch(`/api/v1/orders/${order.id}`)
+      .set("Cookie", cookies)
+      .send({
+        clientId: client.id,
+        vehicleId: vehicle.id,
+        description: "Manutenção corretiva do ar",
+        kilometers: 3000,
+        services: [{ description: "troca de filtro", price: 30 }],
+        items: [
+          { partId: part.id, quantity: 2, unitPrice: Number(part.unitPrice) },
+        ],
+      });
+
+    expect(response.statusCode).toEqual(200);
+    expect(response.body.data).toEqual(
+      expect.objectContaining({
+        completeOrder: expect.objectContaining({
+          id: expect.any(String),
+          clientId: client.id,
+          vehicleId: vehicle.id,
+          description: "MANUTENÇÃO CORRETIVA DO AR",
+          kilometers: 3000,
+          discount: "0",
+          totalValue: "50",
+        }),
+      })
+    );
+  });
+
+  //   it("should not be able to create a order service with invalid client ID", async () => {
+  //     const cookies = await geraCookies("ADMIN");
+
+  //     const part = await prisma.part.create({
+  //       data: {
+  //         name: "FILTRO COMBUSTIVEL",
+  //         quantity: 10,
+  //         description: "FILTRO COMBUSTIVEL DO ARGO 2018",
+  //         unitPrice: 50.2,
+  //       },
+  //     });
+
+  //     const response = await request(application.server)
+  //       .post("/api/v1/orders")
+  //       .set("Cookie", cookies)
+  //       .send({
+  //         clientId: "invalid-id",
+  //         vehicleId: "invalid-id",
+  //         description: "Manutenção corretiva",
+  //         kilometers: 45000,
+  //         services: [
+  //           { description: "troca de oleo", price: 30 },
+  //           { description: "troca de filtro", price: 40 },
+  //         ],
+  //         items: [
+  //           { partId: part.id, quantity: 2, unitPrice: Number(part.unitPrice) },
+  //         ],
+  //       });
+
+  //     expect(response.statusCode).toEqual(404);
+  //     expect(response.body.success).toEqual(false);
+  //     expect(response.body.error).toEqual("Cliente não encontrado");
+  //   });
+
+  //   it("should not be able to create a order service with invalid vehicle ID", async () => {
+  //     const cookies = await geraCookies("ADMIN");
+
+  //     const client = await prisma.client.create({
+  //       data: {
+  //         name: "JOHN DOE CLIENT",
+  //         cpfCnpj: "47022391041",
+  //         phone: "27997876754",
+  //         email: "johndoe@example.com",
+  //         address: "Rua nova, numero 2, Vitoria-ES",
+  //       },
+  //     });
+
+  //     // Crio um novo cliente
+  //     const anotherClient = await prisma.client.create({
+  //       data: {
+  //         name: "JOHN DOE CLIENT 2",
+  //         cpfCnpj: "36658112010",
+  //         phone: "27997876754",
+  //         email: "johndoe@example.com",
+  //         address: "Rua nova, numero 2, Vitoria-ES",
+  //       },
+  //     });
+
+  //     //veiculo irá pertencer a um cliente diferente enviado na ordem de serviço
+  //     const vehicle = await prisma.vehicle.create({
+  //       data: {
+  //         plate: "PPW1020",
+  //         model: "ARGO",
+  //         brand: "FIAT",
+  //         kilometers: 45000,
+  //         year: 2018,
+  //         clientId: anotherClient.id,
+  //       },
+  //     });
+
+  //     const part = await prisma.part.create({
+  //       data: {
+  //         name: "FILTRO COMBUSTIVEL",
+  //         quantity: 10,
+  //         description: "FILTRO COMBUSTIVEL DO ARGO 2018",
+  //         unitPrice: 50.2,
+  //       },
+  //     });
+
+  //     const response = await request(application.server)
+  //       .post("/api/v1/orders")
+  //       .set("Cookie", cookies)
+  //       .send({
+  //         clientId: client.id,
+  //         vehicleId: vehicle.id,
+  //         description: "Manutenção corretiva",
+  //         kilometers: 45000,
+  //         services: [
+  //           { description: "troca de oleo", price: 30 },
+  //           { description: "troca de filtro", price: 40 },
+  //         ],
+  //         items: [
+  //           { partId: part.id, quantity: 2, unitPrice: Number(part.unitPrice) },
+  //         ],
+  //       });
+
+  //     expect(response.statusCode).toEqual(409);
+  //     expect(response.body.success).toEqual(false);
+  //     expect(response.body.error).toEqual(
+  //       "Veículo não encontrado ou não pertence ao cliente"
+  //     );
+  //   });
+
+  //   it("should not be possible to create an ordering service with insufficient parts in stock", async () => {
+  //     const cookies = await geraCookies("ADMIN");
+
+  //     const client = await prisma.client.create({
+  //       data: {
+  //         name: "JOHN DOE CLIENT",
+  //         cpfCnpj: "47022391041",
+  //         phone: "27997876754",
+  //         email: "johndoe@example.com",
+  //         address: "Rua nova, numero 2, Vitoria-ES",
+  //       },
+  //     });
+
+  //     //veiculo irá pertencer a um cliente diferente enviado na ordem de serviço
+  //     const vehicle = await prisma.vehicle.create({
+  //       data: {
+  //         plate: "PPW1020",
+  //         model: "ARGO",
+  //         brand: "FIAT",
+  //         kilometers: 45000,
+  //         year: 2018,
+  //         clientId: client.id,
+  //       },
+  //     });
+
+  //     const part = await prisma.part.create({
+  //       data: {
+  //         name: "FILTRO COMBUSTIVEL",
+  //         quantity: 2, // tenho 2 no estoque
+  //         description: "FILTRO COMBUSTIVEL DO ARGO 2018",
+  //         unitPrice: 50.2,
+  //       },
+  //     });
+
+  //     const response = await request(application.server)
+  //       .post("/api/v1/orders")
+  //       .set("Cookie", cookies)
+  //       .send({
+  //         clientId: client.id,
+  //         vehicleId: vehicle.id,
+  //         description: "Manutenção corretiva",
+  //         kilometers: 45000,
+  //         services: [
+  //           { description: "troca de oleo", price: 30 },
+  //           { description: "troca de filtro", price: 40 },
+  //         ],
+  //         items: [
+  //           { partId: part.id, quantity: 3, unitPrice: Number(part.unitPrice) }, //envio 3 utilizadas
+  //         ],
+  //       });
+
+  //     expect(response.statusCode).toEqual(409);
+  //     expect(response.body.success).toEqual(false);
+  //     expect(response.body.error).toEqual(
+  //       `Quantidade insuficiente em estoque para a peça ${part.name}. Disponível: ${part.quantity}, Solicitado: 3`
+  //     );
+  //   });
+
+  //   it("shouldn't be possible to create a discounted ordering service without being an admin user", async () => {
+  //     const cookies = await geraCookies("USER");
+
+  //     const client = await prisma.client.create({
+  //       data: {
+  //         name: "JOHN DOE CLIENT",
+  //         cpfCnpj: "47022391041",
+  //         phone: "27997876754",
+  //         email: "johndoe@example.com",
+  //         address: "Rua nova, numero 2, Vitoria-ES",
+  //       },
+  //     });
+
+  //     //veiculo irá pertencer a um cliente diferente enviado na ordem de serviço
+  //     const vehicle = await prisma.vehicle.create({
+  //       data: {
+  //         plate: "PPW1020",
+  //         model: "ARGO",
+  //         brand: "FIAT",
+  //         kilometers: 45000,
+  //         year: 2018,
+  //         clientId: client.id,
+  //       },
+  //     });
+
+  //     const part = await prisma.part.create({
+  //       data: {
+  //         name: "FILTRO COMBUSTIVEL",
+  //         quantity: 2,
+  //         description: "FILTRO COMBUSTIVEL DO ARGO 2018",
+  //         unitPrice: 50.2,
+  //       },
+  //     });
+
+  //     const response = await request(application.server)
+  //       .post("/api/v1/orders")
+  //       .set("Cookie", cookies)
+  //       .send({
+  //         clientId: client.id,
+  //         vehicleId: vehicle.id,
+  //         description: "Manutenção corretiva",
+  //         kilometers: 45000,
+  //         discount: 20,
+  //         services: [
+  //           { description: "troca de oleo", price: 30 },
+  //           { description: "troca de filtro", price: 40 },
+  //         ],
+  //         items: [
+  //           { partId: part.id, quantity: 1, unitPrice: Number(part.unitPrice) },
+  //         ],
+  //       });
+
+  //     expect(response.statusCode).toEqual(403);
+  //     expect(response.body.success).toEqual(false);
+  //     expect(response.body.error).toEqual(
+  //       "Apenas administradores podem aplicar descontos"
+  //     );
+  //   });
+
+  //   it("should be possible to create a discounted ordering service being an admin user", async () => {
+  //     const cookies = await geraCookies("ADMIN");
+
+  //     const client = await prisma.client.create({
+  //       data: {
+  //         name: "JOHN DOE CLIENT",
+  //         cpfCnpj: "47022391041",
+  //         phone: "27997876754",
+  //         email: "johndoe@example.com",
+  //         address: "Rua nova, numero 2, Vitoria-ES",
+  //       },
+  //     });
+
+  //     //veiculo irá pertencer a um cliente diferente enviado na ordem de serviço
+  //     const vehicle = await prisma.vehicle.create({
+  //       data: {
+  //         plate: "PPW1020",
+  //         model: "ARGO",
+  //         brand: "FIAT",
+  //         kilometers: 45000,
+  //         year: 2018,
+  //         clientId: client.id,
+  //       },
+  //     });
+
+  //     const part = await prisma.part.create({
+  //       data: {
+  //         name: "FILTRO COMBUSTIVEL",
+  //         quantity: 2,
+  //         description: "FILTRO COMBUSTIVEL DO ARGO 2018",
+  //         unitPrice: 50.22,
+  //       },
+  //     });
+
+  //     const response = await request(application.server)
+  //       .post("/api/v1/orders")
+  //       .set("Cookie", cookies)
+  //       .send({
+  //         clientId: client.id,
+  //         vehicleId: vehicle.id,
+  //         description: "Manutenção corretiva",
+  //         kilometers: 45000,
+  //         discount: 20,
+  //         services: [
+  //           { description: "troca de oleo", price: 30 },
+  //           { description: "troca de filtro", price: 40 },
+  //         ],
+  //         items: [
+  //           { partId: part.id, quantity: 1, unitPrice: Number(part.unitPrice) },
+  //         ],
+  //       });
+
+  //     expect(response.statusCode).toEqual(201);
+  //     expect(response.body.data).toEqual(
+  //       expect.objectContaining({
+  //         completeOrder: expect.objectContaining({
+  //           id: expect.any(String),
+  //           clientId: client.id,
+  //           vehicleId: vehicle.id,
+  //           status: "IN_PROGRESS",
+  //           description: "MANUTENÇÃO CORRETIVA",
+  //           kilometers: 45000,
+  //           discount: "20",
+  //           totalValue: "100.22", // valor com desconto aplicado
+  //         }),
+  //       })
+  //     );
+  //   });
+});

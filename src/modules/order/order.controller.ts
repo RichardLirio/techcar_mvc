@@ -438,6 +438,9 @@ export class OrderController {
           discount: data.discount,
           status: data.status,
           totalValue: totalValue,
+          kilometers: data.kilometers
+            ? data.kilometers
+            : existingOrder.kilometers,
         },
       });
 
