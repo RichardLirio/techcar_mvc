@@ -18,6 +18,7 @@ Sistema completo de gestão para oficinas mecânicas desenvolvido com **TypeScri
 - **🚙 Gestão de Veículos**: Controle de frota vinculada aos clientes
 - **📦 Controle de Estoque**: Gestão inteligente de peças com alertas de estoque insuficiente
 - **📋 Ordens de Serviço**: Sistema completo com cálculo automático e controle de status
+- **🖨️ Geração de PDF**: Impressão profissional de ordens de serviço com layout customizado
 - **💰 Gestão Financeira**: Controle de descontos, preços e valores totais
 - **🔄 Transações Seguras**: Uso de transações de banco para garantir consistência
 
@@ -32,6 +33,7 @@ Sistema completo de gestão para oficinas mecânicas desenvolvido com **TypeScri
 - **Zod** - Validação de schemas e tipos
 - **JWT** - Autenticação stateless
 - **bcrypt** - Hash de senhas
+- **Puppeteer** - Geração de PDFs e automação de navegador
 
 ### DevOps & Tools
 - **Docker** - Containerização
@@ -43,7 +45,32 @@ Sistema completo de gestão para oficinas mecânicas desenvolvido com **TypeScri
 ## 🏗️ Arquitetura
 
 ```
-src/
+├── .env.example
+├── .github
+    └── workflows
+    │   └── run-e2e-tests.yml
+├── .gitignore
+├── .husky
+    ├── commit-msg
+    └── pre-commit
+├── LICENSE
+├── README.md
+├── client.http
+├── commitlint.config.js
+├── docker-compose.yml
+├── eslint.config.mjs
+├── ordem_servico_exemplo.pdf
+├── ordem_servico_preview.html
+├── package-lock.json
+├── package.json
+├── prisma
+    ├── migrations
+    │   ├── 20250708121623_create_database
+    │   │   └── migration.sql
+    │   └── migration_lock.toml
+    ├── schema.prisma
+    └── seed.ts
+├── src
     ├── @types
     │   ├── fastify-jwt.d.ts
     │   └── response.d.ts
@@ -73,6 +100,7 @@ src/
     │   │   ├── delete.order.controller.e2e.spec.ts
     │   │   ├── get.order.controller.e2e.spec.ts
     │   │   ├── order.controller.ts
+    │   │   ├── order.print.service.ts
     │   │   ├── order.routes.ts
     │   │   ├── update.order.controller.e2e.spec.ts
     │   │   └── update.status.order.controller.e2e.spec.ts
@@ -121,6 +149,8 @@ src/
     │   ├── create-order-for-tests.ts
     │   ├── create-users-for-tests.ts
     │   └── return-auth-cookies.ts
+├── tsconfig.json
+└── vitest.config.mts
 ```
 
 ## 🚀 Principais Recursos Técnicos
@@ -173,12 +203,35 @@ export async function VerifyJWT(request: FastifyRequest, reply: FastifyReply) {
 }
 ```
 
-### 4. **Controle de Estoque Inteligente**
+### 4. **Geração de PDF com Puppeteer**
+```typescript
+// Geração de PDF profissional com layout customizado
+const gerador = new GeradorOrdemServico();
+try {
+  await gerador.inicializar();
+  const pdfBuffer = await gerador.gerarPDFJson(order);
+
+  reply
+    .header("Content-Type", "application/pdf")
+    .header("Content-Disposition", `inline; filename=OS-${order.id}.pdf`)
+    .header("Content-Length", pdfBuffer.length);
+
+  return reply.send(Buffer.from(pdfBuffer));
+} catch (error) {
+  console.error("Erro ao gerar OS:", error);
+  throw new HttpError(`Erro ao gerar OS ${order.id}`, 409);
+} finally {
+  await gerador.finalizar();
+}
+  
+```
+
+### 5. **Controle de Estoque Inteligente**
 - Verificação automática de disponibilidade
 - Atualização em tempo real
 - Restauração automática em cancelamentos
 
-### 5. **Sistema de Permissões Granular**
+### 6. **Sistema de Permissões Granular**
 - Controle baseado em roles (ADMIN/USER)
 - Restrições específicas por funcionalidade
 - Middleware de autorização reutilizável
@@ -206,6 +259,23 @@ model Order {
   @@map("orders")
 }
 ```
+
+## 🖨️ Exemplos de Impressão
+
+O sistema gera ordens de serviço com layout profissional, incluindo todas as informações necessárias:
+
+### 📄 Exemplo de Ordem de Serviço (PDF)
+![Exemplo PDF](./ordem_servico_exemplo.pdf)
+
+### 🌐 Exemplo de Ordem de Serviço (HTML)
+![Exemplo HTML](./ordem_servico_preview.html)
+
+### Características da Impressão:
+- **Layout Profissional**: Design limpo e organizado
+- **Informações Completas**: Dados do cliente, veículo, serviços e peças
+- **Cálculos Automáticos**: Subtotais, descontos e valor total
+- **Branding**: Logo e informações da oficina
+- **Responsivo**: Adaptável para diferentes tamanhos de papel
 
 ## 🔧 Instalação e Uso
 
@@ -263,17 +333,17 @@ PG_DB=mydb
 
 ## Admin user access
 ADMIN_USER_EMAIL="admin@admin.com"
-
 ADMIN_USER_PASSWORD="admin@123"
 ```
 
 ## 📝 Endpoints da API
+
 ### Prefixo
 - `/api/v1`
 
 ### Autenticação
 - `POST /login` - Login do usuário
-- `POST /logout` - Login do usuário
+- `POST /logout` - Logout do usuário
 
 ### Clientes
 - `GET /clients` - Listar clientes
@@ -289,6 +359,28 @@ ADMIN_USER_PASSWORD="admin@123"
 - `PUT /orders/:id` - Atualizar ordem
 - `DELETE /orders/:id` - Deletar ordem
 - `PATCH /orders/status/:id` - Atualizar status
+- `GET /orders/:id/pdf` - **Gerar PDF da ordem de serviço**
+
+### Veículos
+- `GET /vehicles` - Listar veículos
+- `POST /vehicles` - Criar veículo
+- `GET /vehicles/:id` - Buscar veículo
+- `PUT /vehicles/:id` - Atualizar veículo
+- `DELETE /vehicles/:id` - Deletar veículo
+
+### Peças
+- `GET /parts` - Listar peças
+- `POST /parts` - Criar peça
+- `GET /parts/:id` - Buscar peça
+- `PUT /parts/:id` - Atualizar peça
+- `DELETE /parts/:id` - Deletar peça
+
+### Usuários (Apenas ADMIN)
+- `GET /users` - Listar usuários
+- `POST /users` - Criar usuário
+- `GET /users/:id` - Buscar usuário
+- `PUT /users/:id` - Atualizar usuário
+- `DELETE /users/:id` - Deletar usuário
 
 ## 🧪 Testes
 
@@ -309,6 +401,7 @@ npm run test:e2e
 - **Indexação**: Índices estratégicos no banco de dados
 - **Validação Eficiente**: Zod com parsing otimizado
 - **Connection Pooling**: Gerenciamento eficiente de conexões
+- **PDF Otimizado**: Geração eficiente com Puppeteer
 
 ## 🔒 Segurança
 
@@ -334,8 +427,8 @@ npm run test:e2e
 
 ## 📞 Contato
 
-**Desenvolvedor:** Richard Lirio
-**Email:** richardlirio@hotmail.com
+**Desenvolvedor:** Richard Lirio  
+**Email:** richardlirio@hotmail.com  
 **LinkedIn:** [Richard Lirio](https://www.linkedin.com/in/richard-silva-lirio-b97484250/)  
 **GitHub:** [Richard Lirio](https://github.com/RichardLirio)
 
@@ -350,6 +443,7 @@ npm run test:e2e
 ✅ **Validação Avançada** - Zod schemas, type-safe validation  
 ✅ **Transações de Banco** - Consistência de dados, rollback automático  
 ✅ **Controle de Permissões** - RBAC, middleware de autorização  
+✅ **Geração de PDF** - Puppeteer, layouts profissionais  
 ✅ **Tratamento de Erros** - Error handling robusto  
 ✅ **Performance** - Queries otimizadas, indexação estratégica  
 ✅ **Segurança** - Hashing, sanitização, rate limiting  
@@ -358,6 +452,7 @@ npm run test:e2e
 
 - **Controle de Estoque em Tempo Real** com transações ACID
 - **Sistema de Permissões Granular** baseado em roles
+- **Geração de PDF Profissional** com layout customizado
 - **Validação Type-Safe** em toda a aplicação
 - **Arquitetura Escalável** preparada para crescimento
 - **Código Limpo e Documentado** seguindo melhores práticas

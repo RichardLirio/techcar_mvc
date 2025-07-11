@@ -35,7 +35,7 @@ export async function ordersRoutes(app: FastifyInstance) {
   );
 
   app.get(
-    "/:id/print",
+    "/:id/pdf",
     { onRequest: [VerifyJWT] },
     ordersController.printOrderById
   );
