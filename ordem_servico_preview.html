@@ -1,0 +1,436 @@
+
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Ordem de Serviço OS-2024-001</title>
+        <style>
+          body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            line-height: 1.4;
+            background-color: #f5f5f5;
+          }
+          
+          .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+          }
+          
+          .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+            margin-bottom: 0;
+          }
+          
+          .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+          }
+          
+          .header h2 {
+            margin: 10px 0 0 0;
+            font-size: 24px;
+            font-weight: 300;
+            opacity: 0.9;
+          }
+          
+          .header .info-header {
+            margin-top: 20px;
+            font-size: 16px;
+            opacity: 0.8;
+          }
+          
+          .content {
+            padding: 30px;
+          }
+          
+          .info-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            border-radius: 0 8px 8px 0;
+          }
+          
+          .info-section h3 {
+            margin: 0 0 15px 0;
+            color: #2c3e50;
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+          }
+          
+          .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+          }
+          
+          .info-item {
+            margin-bottom: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+          }
+          
+          .info-item:last-child {
+            border-bottom: none;
+          }
+          
+          .info-item strong {
+            color: #2c3e50;
+            font-weight: 600;
+          }
+          
+          .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+          }
+          
+          .table th,
+          .table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+          }
+          
+          .table th {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+          }
+          
+          .table tr:nth-child(even) {
+            background-color: #f8f9fa;
+          }
+          
+          .table tr:hover {
+            background-color: #e9ecef;
+            transition: background-color 0.3s ease;
+          }
+          
+          .table tfoot tr {
+            background: #e9ecef !important;
+            font-weight: 600;
+          }
+          
+          .valor {
+            text-align: right;
+            font-weight: 600;
+            color: #27ae60;
+          }
+          
+          .total-section {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+            margin: 30px 0;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+          }
+          
+          .total-section h3 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+          }
+          
+          .status {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+          }
+          
+          .status.em-andamento {
+            background: #ffc107;
+            color: #856404;
+          }
+          
+          .status.concluído {
+            background: #28a745;
+            color: white;
+          }
+          
+          .status.aguardando {
+            background: #17a2b8;
+            color: white;
+          }
+          
+          .status.cancelado {
+            background: #dc3545;
+            color: white;
+          }
+          
+          .observacoes {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+          }
+          
+          .observacoes h4 {
+            margin: 0 0 10px 0;
+            color: #856404;
+          }
+          
+          .footer {
+            margin-top: 40px;
+            text-align: center;
+            border-top: 2px solid #eee;
+            padding-top: 20px;
+            color: #666;
+          }
+          
+          .assinatura {
+            margin-top: 50px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+          }
+          
+          .assinatura-item {
+            text-align: center;
+            padding-top: 40px;
+            border-top: 2px solid #333;
+            font-weight: 600;
+          }
+          
+          .icon {
+            font-size: 20px;
+            margin-right: 8px;
+          }
+          
+          @media print {
+            body {
+              padding: 0;
+              background: white;
+            }
+            
+            .container {
+              box-shadow: none;
+              border-radius: 0;
+            }
+            
+            .header {
+              background: #2c3e50 !important;
+            }
+            
+            .total-section {
+              background: #27ae60 !important;
+            }
+          }
+          
+          @media (max-width: 768px) {
+            .info-grid {
+              grid-template-columns: 1fr;
+              gap: 20px;
+            }
+            
+            .assinatura {
+              grid-template-columns: 1fr;
+              gap: 40px;
+            }
+            
+            .table {
+              font-size: 14px;
+            }
+            
+            .table th,
+            .table td {
+              padding: 10px;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Auto Mecânica Silva</h1>
+            <h2>ORDEM DE SERVIÇO</h2>
+            <div class="info-header">
+              <strong>Nº: OS-2024-001</strong> | 
+              <strong>Data: 10/07/2025</strong> | 
+              <strong>Hora: 21:55:40</strong>
+            </div>
+          </div>
+          
+          <div class="content">
+            <div class="info-grid">
+              <div class="info-section">
+                <h3><span class="icon">🏢</span>Dados da Oficina</h3>
+                <div class="info-item"><strong>Endereço:</strong> Rua das Flores, 123 - Centro</div>
+                <div class="info-item"><strong>Cidade:</strong> Vitória - ES</div>
+                <div class="info-item"><strong>Telefone:</strong> (27) 3333-4444</div>
+                <div class="info-item"><strong>CNPJ:</strong> 12.345.678/0001-90</div>
+              </div>
+              
+              <div class="info-section">
+                <h3><span class="icon">👤</span>Dados do Cliente</h3>
+                <div class="info-item"><strong>Nome:</strong> João da Silva</div>
+                <div class="info-item"><strong>Telefone:</strong> (27) 99999-8888</div>
+                <div class="info-item"><strong>Email:</strong> joao@email.com</div>
+                <div class="info-item"><strong>CPF:</strong> 123.456.789-00</div>
+              </div>
+            </div>
+            
+            <div class="info-section">
+              <h3><span class="icon">🚗</span>Dados do Veículo</h3>
+              <div class="info-grid">
+                <div>
+                  <div class="info-item"><strong>Marca/Modelo:</strong> Toyota Corolla</div>
+                  <div class="info-item"><strong>Ano:</strong> 2020</div>
+                  <div class="info-item"><strong>Placa:</strong> ABC-1234</div>
+                </div>
+                <div>
+                  <div class="info-item"><strong>Cor:</strong> Prata</div>
+                  <div class="info-item"><strong>KM:</strong> 45.000</div>
+                  <div class="info-item"><strong>Combustível:</strong> Flex</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="info-section">
+              <h3><span class="icon">🔧</span>Serviços Executados</h3>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Descrição do Serviço</th>
+                    <th style="width: 150px;">Valor (R$)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+                    <tr>
+                      <td>Troca de óleo do motor</td>
+                      <td class="valor">R$ 150,00</td>
+                    </tr>
+                  
+                    <tr>
+                      <td>Substituição do filtro de óleo</td>
+                      <td class="valor">R$ 45,00</td>
+                    </tr>
+                  
+                    <tr>
+                      <td>Alinhamento e balanceamento</td>
+                      <td class="valor">R$ 80,00</td>
+                    </tr>
+                  
+                    <tr>
+                      <td>Revisão do sistema de freios</td>
+                      <td class="valor">R$ 120,00</td>
+                    </tr>
+                  
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td><strong>Subtotal Serviços</strong></td>
+                    <td class="valor"><strong>R$ 395,00</strong></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            
+            <div class="info-section">
+              <h3><span class="icon">🔩</span>Peças Utilizadas</h3>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Descrição da Peça</th>
+                    <th style="width: 150px;">Valor (R$)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  
+                    <tr>
+                      <td>Óleo 5W30 - 4 litros</td>
+                      <td class="valor">R$ 180,00</td>
+                    </tr>
+                  
+                    <tr>
+                      <td>Filtro de óleo</td>
+                      <td class="valor">R$ 35,00</td>
+                    </tr>
+                  
+                    <tr>
+                      <td>Pastilha de freio dianteira</td>
+                      <td class="valor">R$ 120,00</td>
+                    </tr>
+                  
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td><strong>Subtotal Peças</strong></td>
+                    <td class="valor"><strong>R$ 335,00</strong></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            
+            <div class="total-section">
+              <h3>💰 TOTAL GERAL: R$ 730,00</h3>
+            </div>
+            
+            <div class="info-section">
+              <h3><span class="icon">📝</span>Informações Adicionais</h3>
+              <div class="info-grid">
+                <div>
+                  <div class="info-item"><strong>Mecânico:</strong> Carlos Santos</div>
+                  <div class="info-item"><strong>Status:</strong> <span class="status em-andamento">Em andamento</span></div>
+                </div>
+                <div>
+                  <div class="info-item"><strong>Prazo de Entrega:</strong> 15/07/2024</div>
+                </div>
+              </div>
+            </div>
+            
+            
+              <div class="observacoes">
+                <h4>⚠️ Observações Importantes:</h4>
+                <p>Veículo apresentava ruído no freio dianteiro. Recomenda-se revisão das pastilhas traseiras em 10.000 km.</p>
+              </div>
+            
+            
+            <div class="assinatura">
+              <div class="assinatura-item">
+                <strong>Assinatura do Cliente</strong>
+              </div>
+              <div class="assinatura-item">
+                <strong>Assinatura do Responsável</strong>
+              </div>
+            </div>
+            
+            <div class="footer">
+              <p><strong>Documento gerado automaticamente em 10/07/2025, 21:56:42</strong></p>
+              <p>Este documento é válido apenas com as assinaturas das partes envolvidas</p>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    
