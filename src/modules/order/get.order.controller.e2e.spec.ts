@@ -9,13 +9,14 @@ import { prisma } from "@/lib/database";
 import { CreateOrderForTests } from "test/factories/create-order-for-tests";
 
 describe("Get Order by clientID and VehicleID Controller (e2e)", async () => {
+  let orderId: string;
   let application: FastifyInstance;
   beforeAll(async () => {
     application = await buildApp();
     application.ready();
     await setupTestDatabase();
     await CreateUserForTests();
-    await CreateOrderForTests();
+    orderId = (await CreateOrderForTests()).id;
   });
 
   afterAll(async () => {
@@ -23,7 +24,7 @@ describe("Get Order by clientID and VehicleID Controller (e2e)", async () => {
     await cleanupTestDatabase();
   });
 
-  it("should be able to get order data", async () => {
+  it("should be able to get order data by client ID", async () => {
     const cookies = await geraCookies("ADMIN", application);
     const client = await prisma.client.findFirst();
 
@@ -42,6 +43,15 @@ describe("Get Order by clientID and VehicleID Controller (e2e)", async () => {
       .get(`/api/v1/orders/vehicle/${vehicle?.id}`)
       .set("Cookie", cookies);
 
+    expect(response.statusCode).toEqual(200);
+  });
+
+  it("should be able to get order data by order ID", async () => {
+    const cookies = await geraCookies("ADMIN", application);
+
+    const response = await request(application.server)
+      .get(`/api/v1/orders/${orderId}`)
+      .set("Cookie", cookies);
     expect(response.statusCode).toEqual(200);
   });
 });
