@@ -9,7 +9,6 @@ import { clientsRoutes } from "./modules/clients/clients.routes";
 import { vehiclesRoutes } from "./modules/vehicle/vehicle.routes";
 import { partsRoutes } from "./modules/parts/parts.routes";
 import { ordersRoutes } from "./modules/order/order.routes";
-import { pdfRoutes } from "./modules/pdf/routes";
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = fastify({
@@ -107,7 +106,6 @@ async function registerRoutes(app: FastifyInstance) {
   await app.register(vehiclesRoutes, { prefix: `${prefix}/vehicles` });
   await app.register(partsRoutes, { prefix: `${prefix}/parts` });
   await app.register(ordersRoutes, { prefix: `${prefix}/orders` });
-  await app.register(pdfRoutes, { prefix: `${prefix}/pdf` });
 }
 
 function setupErrorHandling(app: FastifyInstance) {

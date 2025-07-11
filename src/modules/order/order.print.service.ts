@@ -1,6 +1,7 @@
 import puppeteer, { Browser, Page, PDFOptions } from "puppeteer";
 import fs from "fs/promises";
 import { writeFileSync } from "fs";
+import { Decimal } from "@prisma/client/runtime/library";
 
 // Interfaces para tipagem
 interface Oficina {
@@ -71,47 +72,47 @@ interface OrdemServicoJSON {
   clientId: string;
   vehicleId: string;
   status: string;
-  description: string;
+  description: string | null;
   kilometers: number;
-  discount: string;
-  totalValue: string;
-  createdAt: string;
-  updatedAt: string;
+  discount: Decimal;
+  totalValue: Decimal;
+  createdAt: Date;
+  updatedAt: Date;
   client: {
     id: string;
     name: string;
     cpfCnpj: string;
-    phone?: string;
-    email?: string;
-    address?: string;
+    phone: string | null;
+    email: string | null;
+    address: string | null;
   };
   vehicle: {
     id: string;
     plate: string;
     model: string;
     brand: string;
-    year?: number;
+    year: number | null;
   };
   services: {
     id: string;
     orderId: string;
     description: string;
-    price: string;
-    createdAt: string;
-    updatedAt: string;
+    price: Decimal;
+    createdAt: Date;
+    updatedAt: Date;
   }[];
   items: {
     id: string;
     orderId: string;
     partId: string;
     quantity: number;
-    unitPrice: string;
-    createdAt: string;
-    updatedAt: string;
+    unitPrice: Decimal;
+    createdAt: Date;
+    updatedAt: Date;
     part: {
       id: string;
       name: string;
-      unitPrice: string;
+      unitPrice: Decimal;
     };
   }[];
 }
@@ -186,15 +187,15 @@ export class GeradorOrdemServico {
       },
       servicos: json.services.map((servico) => ({
         descricao: servico.description,
-        valor: parseFloat(servico.price),
+        valor: Number(servico.price),
       })),
       pecas: json.items.map((item) => ({
         descricao: `${item.part.name} (x${item.quantity})`,
-        valor: parseFloat(item.unitPrice) * item.quantity,
+        valor: Number(item.unitPrice) * item.quantity,
       })),
-      observacoes: json.description,
+      observacoes: json.description ? json.description : "Não informado",
       status: mapStatus(json.status),
-      desconto: parseFloat(json.discount) || 0,
+      desconto: Number(json.discount) || 0,
     };
   }
 

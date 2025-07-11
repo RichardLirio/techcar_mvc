@@ -9,6 +9,7 @@ import {
 import { HttpError } from "@/utils/http-error";
 import { SuccessResponse } from "@/@types/response";
 import { IdParam, idParamSchema } from "@/schemas/common.schemas";
+import { GeradorOrdemServico } from "./order.print.service";
 
 export class OrderController {
   async create(request: FastifyRequest, reply: FastifyReply) {
@@ -256,9 +257,7 @@ export class OrderController {
     });
 
     if (!order) {
-      return reply
-        .status(404)
-        .send({ error: "Ordem de serviço não encontrada" });
+      throw new HttpError("Ordem de serviço não encontrada", 404);
     }
 
     const response: SuccessResponse = {
@@ -688,5 +687,67 @@ export class OrderController {
     };
 
     return reply.status(200).send(response);
+  }
+
+  async printOrderById(request: FastifyRequest, reply: FastifyReply) {
+    const { id } = idParamSchema.parse(request.params) as IdParam;
+
+    const order = await prisma.order.findUnique({
+      where: { id },
+      include: {
+        client: {
+          select: {
+            id: true,
+            name: true,
+            cpfCnpj: true,
+            phone: true,
+            email: true,
+            address: true,
+          },
+        },
+        vehicle: {
+          select: {
+            id: true,
+            plate: true,
+            model: true,
+            brand: true,
+            year: true,
+          },
+        },
+        services: true,
+        items: {
+          include: {
+            part: {
+              select: {
+                id: true,
+                name: true,
+                unitPrice: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!order) {
+      throw new HttpError("Ordem de serviço não encontrada", 404);
+    }
+    const gerador = new GeradorOrdemServico();
+    try {
+      await gerador.inicializar();
+      const pdfBuffer = await gerador.gerarPDFJson(order);
+
+      reply
+        .header("Content-Type", "application/pdf")
+        .header("Content-Disposition", `inline; filename=OS-${order.id}.pdf`)
+        .header("Content-Length", pdfBuffer.length);
+
+      return reply.send(Buffer.from(pdfBuffer));
+    } catch (error) {
+      console.error("Erro ao gerar OS:", error);
+      throw new HttpError(`Erro ao gerar OS ${order.id}`, 409);
+    } finally {
+      await gerador.finalizar();
+    }
   }
 }

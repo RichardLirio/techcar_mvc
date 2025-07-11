@@ -33,4 +33,10 @@ export async function ordersRoutes(app: FastifyInstance) {
     { onRequest: [VerifyJWT] },
     ordersController.getOrdersByVehicle
   );
+
+  app.get(
+    "/:id/print",
+    { onRequest: [VerifyJWT] },
+    ordersController.printOrderById
+  );
 }
