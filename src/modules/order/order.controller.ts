@@ -228,6 +228,7 @@ export class OrderController {
             cpfCnpj: true,
             phone: true,
             email: true,
+            address: true,
           },
         },
         vehicle: {

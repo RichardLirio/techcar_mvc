@@ -17,7 +17,7 @@ interface Cliente {
   email: string;
   endereco: string;
   cidade: string;
-  cpf: string;
+  cpfCnpj: string;
 }
 
 interface Veiculo {
@@ -25,9 +25,7 @@ interface Veiculo {
   modelo: string;
   ano: string;
   placa: string;
-  cor: string;
   km: string;
-  combustivel: string;
 }
 
 interface ItemServico {
@@ -40,7 +38,7 @@ interface ItemPeca {
   valor: number;
 }
 
-type StatusOS = "Em andamento" | "Concluído" | "Aguardando" | "Cancelado";
+type StatusOS = "Em andamento" | "Concluído" | "Cancelado";
 
 interface DadosOrdemServico {
   numero: string;
@@ -49,12 +47,11 @@ interface DadosOrdemServico {
   oficina: Oficina;
   cliente: Cliente;
   veiculo: Veiculo;
+  desconto: number;
   servicos: ItemServico[];
   pecas: ItemPeca[];
   observacoes?: string;
-  mecanico: string;
   status: StatusOS;
-  prazoEntrega: string;
 }
 
 interface ConfiguracaoPDF {
@@ -68,8 +65,59 @@ interface ConfiguracaoPDF {
   };
 }
 
+// Interface para os dados do JSON
+interface OrdemServicoJSON {
+  id: string;
+  clientId: string;
+  vehicleId: string;
+  status: string;
+  description: string;
+  kilometers: number;
+  discount: string;
+  totalValue: string;
+  createdAt: string;
+  updatedAt: string;
+  client: {
+    id: string;
+    name: string;
+    cpfCnpj: string;
+    phone?: string;
+    email?: string;
+    address?: string;
+  };
+  vehicle: {
+    id: string;
+    plate: string;
+    model: string;
+    brand: string;
+    year?: number;
+  };
+  services: {
+    id: string;
+    orderId: string;
+    description: string;
+    price: string;
+    createdAt: string;
+    updatedAt: string;
+  }[];
+  items: {
+    id: string;
+    orderId: string;
+    partId: string;
+    quantity: number;
+    unitPrice: string;
+    createdAt: string;
+    updatedAt: string;
+    part: {
+      id: string;
+      name: string;
+      unitPrice: string;
+    };
+  }[];
+}
+
 // Classe principal para geração de ordem de serviço
-class GeradorOrdemServico {
+export class GeradorOrdemServico {
   private browser: Browser | null = null;
 
   constructor() {}
@@ -90,10 +138,71 @@ class GeradorOrdemServico {
     }
   }
 
+  // Converter JSON para DadosOrdemServico
+  private converterJsonParaOrdemServico(
+    json: OrdemServicoJSON
+  ): DadosOrdemServico {
+    const createdAt = new Date(json.createdAt);
+
+    // Mapear o status do JSON para StatusOS
+    const mapStatus = (status: string): StatusOS => {
+      switch (status) {
+        case "IN_PROGRESS":
+          return "Em andamento";
+        case "COMPLETED":
+          return "Concluído";
+        case "CANCELLED":
+          return "Cancelado";
+        default:
+          throw new Error(`Status desconhecido: ${status}`);
+      }
+    };
+
+    return {
+      numero: json.id,
+      data: createdAt.toLocaleDateString("pt-BR"),
+      hora: createdAt.toLocaleTimeString("pt-BR"),
+      oficina: {
+        nome: "Oficina Alta Rotação",
+        endereco: "Rua Odineir de Freitas Castro, 144 - Jardim Camburi",
+        cidade: "Vitória - ES",
+        telefone: "(27) 3019-4945",
+        cnpj: "30.444.425/0001-50",
+      },
+      cliente: {
+        nome: json.client.name,
+        telefone: json.client.phone ? json.client.phone : "Não informado",
+        email: json.client.email ? json.client.email : "Não informado",
+        endereco: json.client.address ? json.client.address : "Não informado", // Não presente no JSON
+        cidade: "Não informado", // Não presente no JSON
+        cpfCnpj: json.client.cpfCnpj,
+      },
+      veiculo: {
+        marca: json.vehicle.brand,
+        modelo: json.vehicle.model,
+        ano: json.vehicle.year ? json.vehicle.year.toString() : "Não informado",
+        placa: json.vehicle.plate,
+        km: json.kilometers.toString(),
+      },
+      servicos: json.services.map((servico) => ({
+        descricao: servico.description,
+        valor: parseFloat(servico.price),
+      })),
+      pecas: json.items.map((item) => ({
+        descricao: `${item.part.name} (x${item.quantity})`,
+        valor: parseFloat(item.unitPrice) * item.quantity,
+      })),
+      observacoes: json.description,
+      status: mapStatus(json.status),
+      desconto: parseFloat(json.discount) || 0,
+    };
+  }
+
   // Calcular totais
   private calcularTotais(dados: DadosOrdemServico): {
     totalServicos: number;
     totalPecas: number;
+    desconto: number;
     totalGeral: number;
   } {
     const totalServicos = dados.servicos.reduce(
@@ -104,9 +213,10 @@ class GeradorOrdemServico {
       (total, peca) => total + peca.valor,
       0
     );
-    const totalGeral = totalServicos + totalPecas;
+    const desconto = dados.desconto || 0;
+    const totalGeral = totalServicos + totalPecas - desconto;
 
-    return { totalServicos, totalPecas, totalGeral };
+    return { totalServicos, totalPecas, desconto, totalGeral };
   }
 
   // Formatar valor para moeda brasileira
@@ -121,7 +231,7 @@ class GeradorOrdemServico {
 
   // Gerar HTML da ordem de serviço
   private gerarHTMLOrdemServico(dados: DadosOrdemServico): string {
-    const { totalServicos, totalPecas, totalGeral } =
+    const { totalServicos, totalPecas, desconto, totalGeral } =
       this.calcularTotais(dados);
 
     return `
@@ -262,7 +372,7 @@ class GeradorOrdemServico {
           }
           
           .table tr:hover {
-            background-color: #e9ecef;
+            background-color:  #e9ecef;
             transition: background-color 0.2s ease;
           }
           
@@ -278,20 +388,26 @@ class GeradorOrdemServico {
           }
           
           .total-section {
-            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
-            color: white;
-            padding: 10px;
-            text-align: center;
-            margin: 12px 0;
-            border-radius: 3px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            margin-bottom: 12px;
           }
           
           .total-section h3 {
-            margin: 0;
-            font-size: 12px;
-            font-weight: 700;
-            text-shadow: 0 1px 1px rgba(0,0,0,0.2);
+            margin: 0 0 6px 0;
+            color: #2c3e50;
+            font-size: 11px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+          }
+          
+          .total-section .table tfoot tr {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%) !important;
+            color: white;
+          }
+          
+          .total-section .table tfoot .valor {
+            color: white;
           }
           
           .status {
@@ -349,7 +465,7 @@ class GeradorOrdemServico {
           }
           
           .assinatura {
-            margin-top: 20px;
+            margin-top:40px;
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 30px;
@@ -414,14 +530,12 @@ class GeradorOrdemServico {
               gap: 10px;
             }
             
-            .total-section {
-              background: #27ae60 !important;
-              padding: 8px;
-              margin: 10px 0;
+             .total-section {
+              margin-bottom: 10px;
             }
             
             .total-section h3 {
-              font-size: 11px;
+              font-size: 10px;
             }
             
             .table {
@@ -514,7 +628,7 @@ class GeradorOrdemServico {
                     dados.cliente.email
                   }</div>
                   <div class="info-item"><strong>CPF:</strong> ${
-                    dados.cliente.cpf
+                    dados.cliente.cpfCnpj
                   }</div>
                 </div>
                 <div>
@@ -527,14 +641,8 @@ class GeradorOrdemServico {
                   <div class="info-item"><strong>Placa:</strong> ${
                     dados.veiculo.placa
                   }</div>
-                  <div class="info-item"><strong>Cor:</strong> ${
-                    dados.veiculo.cor
-                  }</div>
                   <div class="info-item"><strong>KM:</strong> ${
                     dados.veiculo.km
-                  }</div>
-                  <div class="info-item"><strong>Combustível:</strong> ${
-                    dados.veiculo.combustivel
                   }</div>
                 </div>
               </div>
@@ -608,25 +716,55 @@ class GeradorOrdemServico {
               </table>
             </div>
             
-            <div class="total-section">
-              <h3>💰 TOTAL GERAL: R$ ${this.formatarMoeda(totalGeral)}</h3>
+               <div class="info-section total-section">
+              <h3><span class="icon">💰</span>Total</h3>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Descrição</th>
+                    <th style="width: 80px;">Valor (R$)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Subtotal Serviços</td>
+                    <td class="valor">R$ ${this.formatarMoeda(
+                      totalServicos
+                    )}</td>
+                  </tr>
+                  <tr>
+                    <td>Subtotal Peças</td>
+                    <td class="valor">R$ ${this.formatarMoeda(totalPecas)}</td>
+                  </tr>
+                  ${
+                    desconto > 0
+                      ? `
+                  <tr>
+                    <td>Desconto</td>
+                    <td class="valor">-R$ ${this.formatarMoeda(desconto)}</td>
+                  </tr>
+                  `
+                      : ""
+                  }
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td><strong>Total Geral</strong></td>
+                    <td class="valor"><strong>R$ ${this.formatarMoeda(
+                      totalGeral
+                    )}</strong></td>
+                  </tr>
+                </tfoot>
+              </table>
             </div>
             
             <div class="info-section">
               <h3><span class="icon">📝</span>Informações Adicionais</h3>
               <div class="info-grid">
                 <div>
-                  <div class="info-item"><strong>Mecânico:</strong> ${
-                    dados.mecanico
-                  }</div>
                   <div class="info-item"><strong>Status:</strong> <span class="status ${this.obterClasseStatus(
                     dados.status
                   )}">${dados.status}</span></div>
-                </div>
-                <div>
-                  <div class="info-item"><strong>Prazo de Entrega:</strong> ${
-                    dados.prazoEntrega
-                  }</div>
                 </div>
               </div>
             </div>
@@ -678,12 +816,10 @@ class GeradorOrdemServico {
     const page: Page = await this.browser.newPage();
 
     try {
-      // Configurar a página
       await page.setContent(this.gerarHTMLOrdemServico(dados), {
         waitUntil: "networkidle0",
       });
 
-      // Configurações otimizadas para A4
       const pdfConfig: PDFOptions = {
         path: nomeArquivo,
         format: config.format || "A4",
@@ -698,9 +834,7 @@ class GeradorOrdemServico {
         ...config,
       };
 
-      // Gerar o PDF
       const pdf = await page.pdf(pdfConfig);
-
       console.log(`✅ PDF gerado com sucesso: ${nomeArquivo}`);
       return pdf;
     } catch (error) {
@@ -711,11 +845,22 @@ class GeradorOrdemServico {
     }
   }
 
+  // Gerar PDF a partir do JSON
+  async gerarPDFJson(
+    json: OrdemServicoJSON,
+    nomeArquivo: string = "ordem_servico.pdf",
+    config: ConfiguracaoPDF = {}
+  ): Promise<Uint8Array> {
+    const dados = this.converterJsonParaOrdemServico(json);
+    return this.gerarPDF(dados, nomeArquivo, config);
+  }
+
   // Gerar HTML
   async gerarHTML(
-    dados: DadosOrdemServico,
+    json: OrdemServicoJSON,
     nomeArquivo: string = "ordem_servico.html"
   ): Promise<string> {
+    const dados = this.converterJsonParaOrdemServico(json);
     const html = this.gerarHTMLOrdemServico(dados);
     await fs.writeFile(nomeArquivo, html, "utf8");
     console.log(`✅ HTML gerado com sucesso: ${nomeArquivo}`);
@@ -737,7 +882,22 @@ class GeradorOrdemServico {
     }
   }
 
-  // Método utilitário para gerar PDF apenas em memória (sem salvar arquivo)
+  // Método utilitário para gerar PDF a partir do JSON com auto-inicialização
+  static async gerarPDFRapidoJson(
+    json: OrdemServicoJSON,
+    nomeArquivo?: string,
+    config?: ConfiguracaoPDF
+  ): Promise<Uint8Array> {
+    const gerador = new GeradorOrdemServico();
+    try {
+      await gerador.inicializar();
+      return await gerador.gerarPDFJson(json, nomeArquivo, config);
+    } finally {
+      await gerador.finalizar();
+    }
+  }
+
+  // Método utilitário para gerar PDF apenas em memória
   static async gerarPDFBuffer(
     dados: DadosOrdemServico,
     config?: ConfiguracaoPDF
@@ -770,7 +930,6 @@ class GeradorOrdemServico {
           ...config,
         };
 
-        // Gerar PDF sem salvar arquivo
         const pdf = await page.pdf(pdfConfig);
         console.log(`✅ PDF gerado em memória com sucesso`);
         return pdf;
@@ -791,145 +950,3 @@ class GeradorOrdemServico {
     console.log(`✅ PDF salvo como arquivo: ${nomeArquivo}`);
   }
 }
-
-// Dados de exemplo (dados de teste)
-const dadosExemplo: DadosOrdemServico = {
-  numero: "OS-2024-001",
-  data: new Date().toLocaleDateString("pt-BR"),
-  hora: new Date().toLocaleTimeString("pt-BR"),
-
-  oficina: {
-    nome: "Auto Mecânica Silva",
-    endereco: "Rua das Flores, 123 - Centro",
-    cidade: "Vitória - ES",
-    telefone: "(27) 3333-4444",
-    cnpj: "12.345.678/0001-90",
-  },
-
-  cliente: {
-    nome: "João da Silva",
-    telefone: "(27) 99999-8888",
-    email: "joao@email.com",
-    endereco: "Av. Principal, 456 - Jardim Camburi",
-    cidade: "Vitória - ES",
-    cpf: "123.456.789-00",
-  },
-
-  veiculo: {
-    marca: "Toyota",
-    modelo: "Corolla",
-    ano: "2020",
-    placa: "ABC-1234",
-    cor: "Prata",
-    km: "45.000",
-    combustivel: "Flex",
-  },
-
-  servicos: [
-    { descricao: "Troca de óleo do motor", valor: 150.0 },
-    { descricao: "Substituição do filtro de óleo", valor: 45.0 },
-    { descricao: "Alinhamento e balanceamento", valor: 80.0 },
-    { descricao: "Revisão do sistema de freios", valor: 120.0 },
-  ],
-
-  pecas: [
-    { descricao: "Óleo 5W30 - 4 litros", valor: 180.0 },
-    { descricao: "Filtro de óleo", valor: 35.0 },
-    { descricao: "Pastilha de freio dianteira", valor: 120.0 },
-  ],
-
-  observacoes:
-    "Veículo apresentava ruído no freio dianteiro. Recomenda-se revisão das pastilhas traseiras em 10.000 km.",
-  mecanico: "Carlos Santos",
-  status: "Em andamento",
-  prazoEntrega: "15/07/2024",
-};
-
-// Função de exemplo para demonstrar o uso
-async function exemploUso(): Promise<void> {
-  try {
-    console.log("🚀 Iniciando exemplos de uso...\n");
-
-    // Método 1: Gerar PDF e salvar diretamente
-    console.log("📄 Método 1: Gerando PDF direto...");
-    await GeradorOrdemServico.gerarPDFRapido(
-      dadosExemplo,
-      "ordem_servico_exemplo.pdf"
-    );
-
-    // Método 2: Gerar PDF em memória e depois salvar
-    console.log("💾 Método 2: Gerando PDF em memória...");
-    const pdfBuffer = await GeradorOrdemServico.gerarPDFBuffer(dadosExemplo);
-    await GeradorOrdemServico.salvarPDFBuffer(
-      pdfBuffer,
-      "ordem_servico_buffer.pdf"
-    );
-
-    // Método 3: Usando a classe diretamente para múltiplos PDFs
-    console.log("🔄 Método 3: Gerando múltiplos PDFs...");
-    const gerador = new GeradorOrdemServico();
-    await gerador.inicializar();
-
-    // Gerar vários PDFs com a mesma instância (mais eficiente)
-    await gerador.gerarPDF(dadosExemplo, "ordem_servico_1.pdf");
-    await gerador.gerarHTML(dadosExemplo, "ordem_servico_preview.html");
-
-    // Exemplo com configuração personalizada
-    await gerador.gerarPDF(dadosExemplo, "ordem_servico_a3.pdf", {
-      format: "A3",
-      margin: { top: "30px", bottom: "30px" },
-    });
-
-    await gerador.finalizar();
-
-    console.log("\n✅ Todos os exemplos foram executados com sucesso!");
-  } catch (error) {
-    console.error("❌ Erro ao executar exemplos:", error);
-  }
-}
-
-// Exemplo de uso com Express.js (para APIs REST)
-// async function exemploExpressAPI(): Promise<void> {
-/* 
-  Exemplo de como usar em uma API Express:
-  
-  import express from 'express';
-  const app = express();
-  
-  app.post('/api/gerar-os', async (req, res) => {
-    try {
-      const dados: DadosOrdemServico = req.body;
-      
-      // Gerar PDF em memória
-      const pdfBuffer = await GeradorOrdemServico.gerarPDFBuffer(dados);
-      
-      // Enviar PDF como resposta
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename=OS-${dados.numero}.pdf`);
-      res.send(Buffer.from(pdfBuffer));
-      
-    } catch (error) {
-      console.error('Erro ao gerar OS:', error);
-      res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-  });
-  */
-//}
-
-// Executar exemplo se o arquivo for executado diretamente
-if (require.main === module) {
-  exemploUso();
-}
-
-export {
-  GeradorOrdemServico,
-  DadosOrdemServico,
-  Oficina,
-  Cliente,
-  Veiculo,
-  ItemServico,
-  ItemPeca,
-  StatusOS,
-  ConfiguracaoPDF,
-  dadosExemplo,
-};
