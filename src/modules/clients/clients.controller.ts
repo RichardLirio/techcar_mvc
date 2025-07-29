@@ -135,7 +135,7 @@ export class ClientController {
 
     const response: SuccessResponse = {
       success: true,
-      message: "Usuário atualizado com sucesso",
+      message: "Cliente atualizado com sucesso",
       data: { clientUpdated },
     };
 
