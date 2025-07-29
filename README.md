@@ -425,6 +425,9 @@ npm run test:e2e
 - **Error Handling**: Tratamento robusto de erros
 - **Logging**: Sistema de logs estruturado
 
+## 📖 Documentação Técnica (Em inglês)
+**Documentação:** [deepwiki](https://deepwiki.com/RichardLirio/techcar_mvc/8.2-cicd-pipeline)  
+
 ## 📞 Contato
 
 **Desenvolvedor:** Richard Lirio  
