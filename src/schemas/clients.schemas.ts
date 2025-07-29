@@ -1,6 +1,6 @@
 import z from "zod";
 import { cpfCnpjValidation } from "./validation";
-import { formatCpfCnpj } from "@/utils/formata-cpfCnpj";
+import { formatCpfCnpj } from "@/utils/normalize";
 
 // Client schemas
 export const createClientSchema = z.object({

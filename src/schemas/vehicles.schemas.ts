@@ -1,4 +1,4 @@
-import { formatarPlaca } from "@/utils/formata-placa-veiculos";
+import { formatarPlaca } from "@/utils/normalize";
 import z from "zod";
 
 // Vehicle schemas
