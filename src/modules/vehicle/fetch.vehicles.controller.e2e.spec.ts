@@ -5,6 +5,7 @@ import { buildApp } from "@/app";
 import { FastifyInstance } from "fastify";
 import { CreateUserForTests } from "test/factories/create-users-for-tests";
 import { geraCookies } from "test/factories/return-auth-cookies";
+import { prisma } from "@/lib/database";
 
 describe("Fetch Vehicles Controller (e2e)", async () => {
   let application: FastifyInstance;
@@ -22,6 +23,27 @@ describe("Fetch Vehicles Controller (e2e)", async () => {
 
   it("should be able to fetch all vehicles", async () => {
     const cookies = await geraCookies("ADMIN", application);
+
+    const client = await prisma.client.create({
+      data: {
+        name: "JOHN DOE CLIENT",
+        cpfCnpj: "47022391041",
+        phone: "27997876754",
+        email: "johndoe@example.com",
+        address: "Rua nova, numero 2, Vitoria-ES",
+      },
+    });
+
+    await prisma.vehicle.create({
+      data: {
+        plate: "PPW1020",
+        model: "ARGO",
+        brand: "FIAT",
+        kilometers: 10000,
+        year: 2017,
+        clientId: client.id,
+      },
+    });
 
     const response = await request(application.server)
       .get("/api/v1/vehicles")
