@@ -137,6 +137,10 @@ export class UsersController {
       user.name = data.name;
     }
 
+    if (data.role) {
+      user.role = data.role;
+    }
+
     if (data.password) {
       const passwordHashed = await hashPassword(data.password);
       user.password = passwordHashed;
