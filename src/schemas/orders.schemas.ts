@@ -3,7 +3,7 @@ import z from "zod";
 // Order schemas
 export const serviceSchema = z.object({
   description: z.string().min(1, "Descrição é obrigatória").toUpperCase(),
-  price: z
+  price: z.coerce
     .number()
     .min(0, "Preço deve ser positivo")
     .transform((val) => Number(val.toFixed(2))), // Arredonda corretamente
@@ -12,7 +12,7 @@ export const serviceSchema = z.object({
 export const orderItemSchema = z.object({
   partId: z.string().min(1, "Peça é obrigatória"),
   quantity: z.number().int().positive("Quantidade deve ser positiva"),
-  unitPrice: z
+  unitPrice: z.coerce
     .number()
     .min(0, "Preço deve ser positivo")
     .transform((val) => Number(val.toFixed(2))), // Arredonda corretamente

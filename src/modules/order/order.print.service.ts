@@ -387,6 +387,12 @@ export class GeradorOrdemServico {
             font-weight: 600;
             color: #27ae60;
           }
+
+          .valor-deconto {
+            text-align: right;
+            font-weight: 600;
+            color: #c7300a;
+          }
           
           .total-section {
             margin-bottom: 12px;
@@ -742,7 +748,9 @@ export class GeradorOrdemServico {
                       ? `
                   <tr>
                     <td>Desconto</td>
-                    <td class="valor">-R$ ${this.formatarMoeda(desconto)}</td>
+                    <td  class="valor-deconto">-R$ ${this.formatarMoeda(
+                      desconto
+                    )}</td>
                   </tr>
                   `
                       : ""
