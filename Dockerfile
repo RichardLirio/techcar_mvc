@@ -5,7 +5,7 @@ RUN apk add --no-cache dumb-init postgresql-client
 
 # Cria um usuário não-root para segurança
 RUN addgroup -g 1001 -S nodejs
-RUN adduser -S expressapp -u 1001
+RUN adduser -S techcarapi -u 1001
 
 # Define o diretório de trabalho
 WORKDIR /app
@@ -27,8 +27,8 @@ COPY . .
 # Gerar cliente Prisma
 RUN npx prisma generate
 
-RUN chown -R expressapp:nodejs /app
-USER expressapp
+RUN chown -R techcarapi:nodejs /app
+USER techcarapi
 EXPOSE 3333
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["dumb-init", "npm", "run", "dev"]
@@ -66,23 +66,23 @@ FROM base AS production
 ENV NODE_ENV=production
 
 # Copiar dependências de produção do stage anterior
-COPY --from=production-deps --chown=expressapp:nodejs /app/node_modules ./node_modules
+COPY --from=production-deps --chown=techcarapi:nodejs /app/node_modules ./node_modules
 
 # Copiar código compilado do builder
-COPY --from=builder --chown=expressapp:nodejs /app/dist ./dist
+COPY --from=builder --chown=techcarapi:nodejs /app/dist ./dist
 
 # Copiar cliente Prisma gerado do builder
-COPY --from=builder --chown=expressapp:nodejs /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder --chown=expressapp:nodejs /app/node_modules/@prisma/client ./node_modules/@prisma/client
+COPY --from=builder --chown=techcarapi:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=techcarapi:nodejs /app/node_modules/@prisma/client ./node_modules/@prisma/client
 
 # Copiar schema do Prisma e arquivos de migração para produção
-COPY --from=builder --chown=expressapp:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=techcarapi:nodejs /app/prisma ./prisma
 
 # Copiar package.json para ter as informações necessárias
-COPY --from=builder --chown=expressapp:nodejs /app/package*.json ./
+COPY --from=builder --chown=techcarapi:nodejs /app/package*.json ./
 
 # Muda para usuário não-root
-USER expressapp
+USER techcarapi
 
 # Expõe a porta da aplicação
 EXPOSE 3333
