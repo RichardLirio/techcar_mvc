@@ -2,12 +2,12 @@
   "name": "oficina-mecanica-api",
   "version": "1.0.0",
   "description": "API para gerenciamento de oficina mecânica",
-  "main": "dist/server.js",
+  "main": "dist/src/server.js",
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsup src --out-dir dist",
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
     "db:generate": "prisma generate",
@@ -43,6 +43,7 @@
     "husky": "^9.1.7",
     "prisma": "^6.11.1",
     "supertest": "^7.1.3",
+    "tsup": "^8.5.0",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.36.0",

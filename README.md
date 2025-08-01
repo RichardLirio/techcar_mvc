@@ -281,24 +281,138 @@ O sistema gera ordens de serviço com layout profissional, incluindo todas as in
 
 ### Pré-requisitos
 - Node.js 20+
-- PostgreSQL 13+
-- Docker (opcional)
+- PostgreSQL 13+ (ou Docker)
+- Docker e Docker Compose (recomendado)
 
-### Instalação
+### 🐳 Instalação com Docker (Recomendado)
+
+#### Opção 1: Desenvolvimento
+```bash
+# Clone o repositório
+git clone https://github.com/RichardLirio/techcar_mvc.git
+cd techcar-mvc
+
+# Configure as variáveis de ambiente
+cp .env.example .env
+# Edite o arquivo .env com suas configurações
+
+# Crie o arquivo docker-compose.dev.yml
+cp docker-compose.yml docker-compose.dev.yml
+# Edite o target para 'development' no docker-compose.dev.yml
+
+# Inicie os serviços em modo desenvolvimento
+docker-compose -f docker-compose.dev.yml up --build
+
+# Para parar os serviços
+docker-compose -f docker-compose.dev.yml down
+
+# Para ver os logs em tempo real
+docker-compose -f docker-compose.dev.yml logs -f app
+```
+
+#### Opção 2: Produção
+```bash
+# Clone o repositório
+git clone https://github.com/RichardLirio/techcar_mvc.git
+cd techcar-mvc
+
+# Configure as variáveis de ambiente para produção
+cp .env.example .env
+# Configure NODE_ENV=production e outras variáveis necessárias
+
+# Inicie os serviços em modo produção
+docker-compose up --build -d
+
+# Para parar os serviços
+docker-compose down
+
+# Para ver os logs
+docker-compose logs -f app
+
+# Para rebuild apenas da aplicação
+docker-compose up --build app -d
+```
+
+### 📦 Comandos Docker Úteis
+
+#### Gerenciamento de Containers
+```bash
+# Ver status dos containers
+docker-compose ps
+
+# Parar todos os serviços
+docker-compose down
+
+# Parar e remover volumes (⚠️ apaga dados do banco)
+docker-compose down -v
+
+# Rebuild da aplicação
+docker-compose build app
+
+# Executar comandos dentro do container
+docker-compose exec app npm run db:studio
+docker-compose exec app npx prisma migrate dev
+docker-compose exec app npm run test
+
+# Acessar shell do container
+docker-compose exec app sh
+
+# Ver logs específicos
+docker-compose logs postgres
+docker-compose logs app
+```
+
+#### Banco de Dados
+```bash
+# Conectar ao PostgreSQL
+docker-compose exec postgres psql -U ${PG_USER} -d ${PG_DB}
+
+# Fazer backup do banco
+docker-compose exec postgres pg_dump -U ${PG_USER} ${PG_DB} > backup.sql
+
+# Restaurar backup
+docker-compose exec -T postgres psql -U ${PG_USER} -d ${PG_DB} < backup.sql
+
+# Reset completo do banco (⚠️ apaga todos os dados)
+docker-compose down -v
+docker-compose up postgres -d
+docker-compose exec app npx prisma migrate dev
+```
+
+#### Monitoramento
+```bash
+# Monitor de recursos
+docker stats techcar-api techcar-api-pg
+
+# Verificar saúde dos containers
+docker-compose exec postgres pg_isready -U ${PG_USER} -d ${PG_DB}
+
+# Limpar recursos não utilizados
+docker system prune -a
+```
+
+### 💻 Instalação Local (Sem Docker)
 
 ```bash
 # Clone o repositório
 git clone https://github.com/RichardLirio/techcar_mvc.git
-cd oficina-mecanica
+cd techcar-mvc
 
 # Instale as dependências
 npm install
 
 # Configure as variáveis de ambiente
 cp .env.example .env
+# Configure DATABASE_URL para seu PostgreSQL local
 
 # Execute as migrações
 npx prisma migrate dev
+
+# Gere o client Prisma
+npx prisma generate
+
+# Execute o seed (opcional)
+npx prisma db seed
 
 # Inicie o servidor
 npm run dev

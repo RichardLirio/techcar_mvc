@@ -63,7 +63,7 @@ class Server {
 
       await this.app.listen({
         port: env.PORT,
-        host: env.HOST,
+        host: "0.0.0.0",
       });
 
       this.app.log.info(`Servidor rodando em http://${env.HOST}:${env.PORT}`);
