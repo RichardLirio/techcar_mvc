@@ -295,19 +295,19 @@ cd techcar-mvc
 # Configure as variáveis de ambiente
 cp .env.example .env
 # Edite o arquivo .env com suas configurações
+# Configure RUN_PRISMA_COMMANDS=true para desenvolvimento
 
-# Crie o arquivo docker-compose.dev.yml
-cp docker-compose.yml docker-compose.dev.yml
-# Edite o target para 'development' no docker-compose.dev.yml
+# Crie um docker-compose.dev.yml (se necessário)
+# Ou modifique o target no docker-compose.yml para 'development'
 
 # Inicie os serviços em modo desenvolvimento
-docker-compose -f docker-compose.dev.yml up --build
+docker-compose up --build
 
 # Para parar os serviços
-docker-compose -f docker-compose.dev.yml down
+docker-compose down
 
 # Para ver os logs em tempo real
-docker-compose -f docker-compose.dev.yml logs -f app
+docker-compose logs -f app
 ```
 
 #### Opção 2: Produção
@@ -319,6 +319,7 @@ cd techcar-mvc
 # Configure as variáveis de ambiente para produção
 cp .env.example .env
 # Configure NODE_ENV=production e outras variáveis necessárias
+# DATABASE_SEED=true se quiser executar seed automaticamente
 
 # Inicie os serviços em modo produção
 docker-compose up --build -d

@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { buildApp } from "./app";
 import { env } from "./env";
+import { seed } from "./seed";
 
 class Server {
   private app: FastifyInstance | null = null;
@@ -54,6 +55,7 @@ class Server {
   async start() {
     try {
       if (!this.app) {
+        await seed();
         await this.initialize();
       }
 
@@ -66,9 +68,9 @@ class Server {
         host: "0.0.0.0",
       });
 
-      this.app.log.info(`Servidor rodando em http://${env.HOST}:${env.PORT}`);
-      this.app.log.info(`Health check: http://${env.HOST}:${env.PORT}/health`);
-      this.app.log.info(`Ambiente: ${env.NODE_ENV}`);
+      console.log(`Servidor rodando em http://${env.HOST}:${env.PORT}`);
+      console.log(`Health check: http://${env.HOST}:${env.PORT}/health`);
+      console.log(`Ambiente: ${env.NODE_ENV}`);
     } catch (error) {
       console.error("Erro ao iniciar servidor:", error);
       process.exit(1);
