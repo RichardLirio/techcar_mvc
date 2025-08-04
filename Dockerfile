@@ -1,7 +1,22 @@
 FROM node:22.17.0-alpine AS base
 
-# Instala dependências do sistema necessárias
-RUN apk add --no-cache dumb-init postgresql-client
+# Instala dependências do sistema necessárias incluindo Chrome/Chromium para Puppeteer
+RUN apk add --no-cache \
+    dumb-init \
+    postgresql-client \
+    chromium \
+    nss \
+    freetype \
+    freetype-dev \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
+    wget \
+    && rm -rf /var/cache/apk/*
+
+# Define variável de ambiente para que o Puppeteer use o Chromium instalado
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Cria um usuário não-root para segurança
 RUN addgroup -g 1001 -S nodejs
@@ -9,6 +24,9 @@ RUN adduser -S techcarapi -u 1001
 
 # Define o diretório de trabalho
 WORKDIR /app
+
+# Copia pasta tmp para evitar problemas de permissão
+RUN mkdir -p /app/tmp && chown techcarapi:nodejs /app/tmp
 
 # Copia os arquivos de dependências
 COPY package*.json ./

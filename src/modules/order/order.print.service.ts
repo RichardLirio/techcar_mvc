@@ -1,7 +1,8 @@
 import puppeteer, { Browser, Page, PDFOptions } from "puppeteer";
 import fs from "fs/promises";
-import { writeFileSync } from "fs";
+import { existsSync, mkdirSync, writeFileSync } from "fs";
 import { Decimal } from "@prisma/client/runtime/library";
+import path from "path";
 
 // Interfaces para tipagem
 interface Oficina {
@@ -64,6 +65,7 @@ interface ConfiguracaoPDF {
     bottom?: string;
     left?: string;
   };
+  outputDir?: string;
 }
 
 // Interface para os dados do JSON
@@ -120,14 +122,41 @@ interface OrdemServicoJSON {
 // Classe principal para geração de ordem de serviço
 export class GeradorOrdemServico {
   private browser: Browser | null = null;
+  private tmpDir: string;
 
-  constructor() {}
+  constructor(tmpDir: string = "/tmp") {
+    this.tmpDir = tmpDir;
+    this.criarDiretorioSeNaoExistir(this.tmpDir);
+  }
+
+  // Criar diretório se não existir
+  private criarDiretorioSeNaoExistir(dir: string): void {
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
+      console.log(`📁 Diretório criado: ${dir}`);
+    }
+  }
+
+  // Obter caminho completo do arquivo
+  private obterCaminhoCompleto(
+    nomeArquivo: string,
+    outputDir?: string
+  ): string {
+    const diretorio = outputDir || this.tmpDir;
+    this.criarDiretorioSeNaoExistir(diretorio);
+    return path.join(diretorio, nomeArquivo);
+  }
 
   // Inicializar o browser
   async inicializar(): Promise<void> {
     this.browser = await puppeteer.launch({
       headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+      ],
     });
   }
 
@@ -815,7 +844,7 @@ export class GeradorOrdemServico {
     dados: DadosOrdemServico,
     nomeArquivo: string = "ordem_servico.pdf",
     config: ConfiguracaoPDF = {}
-  ): Promise<Uint8Array> {
+  ): Promise<{ buffer: Uint8Array; caminho: string }> {
     if (!this.browser) {
       throw new Error(
         "Browser não foi inicializado. Chame inicializar() primeiro."
@@ -823,6 +852,10 @@ export class GeradorOrdemServico {
     }
 
     const page: Page = await this.browser.newPage();
+    const caminhoCompleto = this.obterCaminhoCompleto(
+      nomeArquivo,
+      config.outputDir
+    );
 
     try {
       await page.setContent(this.gerarHTMLOrdemServico(dados), {
@@ -830,7 +863,7 @@ export class GeradorOrdemServico {
       });
 
       const pdfConfig: PDFOptions = {
-        path: nomeArquivo,
+        path: caminhoCompleto,
         format: config.format || "A4",
         printBackground: config.printBackground !== false,
         margin: {
@@ -844,8 +877,11 @@ export class GeradorOrdemServico {
       };
 
       const pdf = await page.pdf(pdfConfig);
-      console.log(`✅ PDF gerado com sucesso: ${nomeArquivo}`);
-      return pdf;
+      console.log(`✅ PDF gerado com sucesso: ${caminhoCompleto}`);
+      return {
+        buffer: pdf,
+        caminho: caminhoCompleto,
+      };
     } catch (error) {
       console.error("❌ Erro ao gerar PDF:", error);
       throw error;
@@ -859,7 +895,7 @@ export class GeradorOrdemServico {
     json: OrdemServicoJSON,
     nomeArquivo: string = "ordem_servico.pdf",
     config: ConfiguracaoPDF = {}
-  ): Promise<Uint8Array> {
+  ): Promise<{ buffer: Uint8Array; caminho: string }> {
     const dados = this.converterJsonParaOrdemServico(json);
     return this.gerarPDF(dados, nomeArquivo, config);
   }
@@ -867,12 +903,15 @@ export class GeradorOrdemServico {
   // Gerar HTML
   async gerarHTML(
     json: OrdemServicoJSON,
-    nomeArquivo: string = "ordem_servico.html"
+    nomeArquivo: string = "ordem_servico.html",
+    outputDir?: string
   ): Promise<string> {
     const dados = this.converterJsonParaOrdemServico(json);
     const html = this.gerarHTMLOrdemServico(dados);
-    await fs.writeFile(nomeArquivo, html, "utf8");
-    console.log(`✅ HTML gerado com sucesso: ${nomeArquivo}`);
+    const caminhoCompleto = this.obterCaminhoCompleto(nomeArquivo, outputDir);
+
+    await fs.writeFile(caminhoCompleto, html, "utf8");
+    console.log(`✅ HTML gerado com sucesso: ${caminhoCompleto}`);
     return html;
   }
 
@@ -881,8 +920,8 @@ export class GeradorOrdemServico {
     dados: DadosOrdemServico,
     nomeArquivo?: string,
     config?: ConfiguracaoPDF
-  ): Promise<Uint8Array> {
-    const gerador = new GeradorOrdemServico();
+  ): Promise<{ buffer: Uint8Array; caminho: string }> {
+    const gerador = new GeradorOrdemServico(config?.outputDir);
     try {
       await gerador.inicializar();
       return await gerador.gerarPDF(dados, nomeArquivo, config);
@@ -896,8 +935,8 @@ export class GeradorOrdemServico {
     json: OrdemServicoJSON,
     nomeArquivo?: string,
     config?: ConfiguracaoPDF
-  ): Promise<Uint8Array> {
-    const gerador = new GeradorOrdemServico();
+  ): Promise<{ buffer: Uint8Array; caminho: string }> {
+    const gerador = new GeradorOrdemServico(config?.outputDir);
     try {
       await gerador.inicializar();
       return await gerador.gerarPDFJson(json, nomeArquivo, config);

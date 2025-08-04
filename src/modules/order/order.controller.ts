@@ -740,9 +740,9 @@ export class OrderController {
       reply
         .header("Content-Type", "application/pdf")
         .header("Content-Disposition", `inline; filename=OS-${order.id}.pdf`)
-        .header("Content-Length", pdfBuffer.length);
+        .header("Content-Length", pdfBuffer.buffer.length);
 
-      return reply.send(Buffer.from(pdfBuffer));
+      return reply.send(Buffer.from(pdfBuffer.buffer));
     } catch (error) {
       console.error("Erro ao gerar OS:", error);
       throw new HttpError(`Erro ao gerar OS ${order.id}`, 409);
